@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Entity
 @Table(name = "progress")
-public class UserProgressEntity {
+public class ProgressEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "progress_id_seq")
