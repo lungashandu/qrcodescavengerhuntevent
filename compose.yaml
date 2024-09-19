@@ -1,0 +1,21 @@
+name: qrcodescavengerhuntapp
+
+services:
+  db:
+    image: postgres
+    restart: always
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: /run/secrets/db_password
+    secrets:
+      - db_password
+    ports:
+      - "5432:5432"
+
+
+volumes:
+  db-data:
+secrets:
+  db_password:
+    file: db/ifihlo.txt
