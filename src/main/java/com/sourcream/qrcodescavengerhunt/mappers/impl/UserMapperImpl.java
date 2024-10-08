@@ -4,7 +4,9 @@ import com.sourcream.qrcodescavengerhunt.domain.dto.UserDto;
 import com.sourcream.qrcodescavengerhunt.domain.entities.UserEntity;
 import com.sourcream.qrcodescavengerhunt.mappers.Mapper;
 import org.modelmapper.ModelMapper;
+import org.springframework.stereotype.Component;
 
+@Component
 public class UserMapperImpl implements Mapper<UserEntity, UserDto> {
 
     private ModelMapper modelMapper;
