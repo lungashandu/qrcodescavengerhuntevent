@@ -18,7 +18,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserEntity registerUser(UserEntity userEntity) {
+    public UserEntity saveUser(UserEntity userEntity) {
         return userRepository.save(userEntity);
     }
 
@@ -33,6 +33,11 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         userEntity.setRole(role);
         return userRepository.save(userEntity);
+    }
+
+    @Override
+    public boolean isExists(Long id) {
+        return userRepository.existsById(id);
     }
 
     @Override
