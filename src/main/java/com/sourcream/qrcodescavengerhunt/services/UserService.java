@@ -12,7 +12,7 @@ public interface UserService {
 
     Optional<UserEntity> getUserByEmail(String email);
 
-    UserEntity updateUserRole(String email, Set<Role> role);
+    UserEntity updateUserRole(Long id, Role role);
 
     void deleteUser(Long id);
 }
