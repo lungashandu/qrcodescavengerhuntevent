@@ -49,7 +49,7 @@ public class UserController {
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 
-    @PutMapping("/{id}/role")
+    @PutMapping("/users/{id}/role")
     public ResponseEntity<UserDto> updateUserRole(@PathVariable("id") Long id, @RequestBody Role role) {
         if(!userService.isExists(id)){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
