@@ -4,12 +4,14 @@ import com.sourcream.qrcodescavengerhunt.domain.entities.EventEntity;
 import com.sourcream.qrcodescavengerhunt.domain.entities.UserEntity;
 import com.sourcream.qrcodescavengerhunt.repositories.EventRepository;
 import com.sourcream.qrcodescavengerhunt.services.EventService;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+@Service
 public class EventServiceImpl implements EventService {
 
     private EventRepository eventRepository;
