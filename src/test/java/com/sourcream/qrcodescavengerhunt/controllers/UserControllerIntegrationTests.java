@@ -2,7 +2,7 @@ package com.sourcream.qrcodescavengerhunt.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sourcream.qrcodescavengerhunt.TestDataUtil;
-import com.sourcream.qrcodescavengerhunt.config.TestSecurityConfig;
+import com.sourcream.qrcodescavengerhunt.security.config.TestSecurityConfig;
 import com.sourcream.qrcodescavengerhunt.domain.entities.Role;
 import com.sourcream.qrcodescavengerhunt.domain.entities.UserEntity;
 import com.sourcream.qrcodescavengerhunt.services.UserService;
@@ -14,13 +14,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
@@ -133,7 +130,7 @@ public class UserControllerIntegrationTests {
         String roleUpdateJson = objectMapper.writeValueAsString(Role.ADMIN);
 
         mockMvc.perform(
-                MockMvcRequestBuilders.put("/users/" + savedUserEntity.getId() + "/role")
+                MockMvcRequestBuilders.patch("/users/" + savedUserEntity.getId() + "/role")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(roleUpdateJson)
         ).andExpect(
@@ -149,7 +146,7 @@ public class UserControllerIntegrationTests {
         String roleUpdateJson = objectMapper.writeValueAsString(Role.ADMIN);
 
         mockMvc.perform(
-                MockMvcRequestBuilders.put("/users/" + savedUserEntity.getId() + "/role")
+                MockMvcRequestBuilders.patch("/users/" + savedUserEntity.getId() + "/role")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(roleUpdateJson)
         ).andExpect(

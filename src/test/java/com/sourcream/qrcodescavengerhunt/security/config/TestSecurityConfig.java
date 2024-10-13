@@ -1,4 +1,4 @@
-package com.sourcream.qrcodescavengerhunt.config;
+package com.sourcream.qrcodescavengerhunt.security.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
