@@ -22,12 +22,15 @@ public class LocationEntity {
     @JoinColumn(name = "eventId")
     private EventEntity eventEntity;
 
+    @Column(name = "name", nullable = false)
+    private String name;
+
     @Column(name = "qrCodeUrl", nullable = false)
     private String qrCodeUrl;
 
-    @Column(name = "hint", nullable = false)
+    @Column(name = "hint")
     private String hint;
 
-    @Column(name = "challenge")
+    @Column(name = "challenge", nullable = false)
     private String challenge;
 }

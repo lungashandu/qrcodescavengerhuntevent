@@ -33,7 +33,7 @@ public class QRCodeGenerator {
         return uploadQRCodeToFirebase(fileName, qrCodeBytes);
     }
 
-    public byte[] generateQRCodeImageByteArray(String text, int width, int height) throws Exception {
+    private byte[] generateQRCodeImageByteArray(String text, int width, int height) throws Exception {
         BitMatrix bitMatrix = new MultiFormatWriter().encode(text, BarcodeFormat.QR_CODE, width, height);
         ByteArrayOutputStream pngOutStream = new ByteArrayOutputStream();
         MatrixToImageWriter.writeToStream(bitMatrix, "PNG", pngOutStream);
@@ -41,7 +41,7 @@ public class QRCodeGenerator {
         return pngOutStream.toByteArray();
     }
 
-    public String uploadQRCodeToFirebase(String fileName, byte[] qrCodeBytes) throws Exception {
+    private String uploadQRCodeToFirebase(String fileName, byte[] qrCodeBytes) throws Exception {
         BlobId blobId = BlobId.of(BUCKET_NAME, fileName);
         BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType("image/png").build();
 

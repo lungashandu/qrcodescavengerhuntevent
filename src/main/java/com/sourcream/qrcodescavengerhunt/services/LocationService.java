@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public interface LocationService {
 
-    LocationEntity saveLocation(LocationEntity locationEntity);
+    LocationEntity saveLocation(LocationEntity locationEntity) throws Exception;
 
     List<LocationEntity> getLocationByEvent(EventEntity event);
 
