@@ -26,7 +26,10 @@ public class LocationServiceImpl implements LocationService {
 
     @Override
     public LocationEntity saveLocation(LocationEntity locationEntity) throws Exception {
-        String qrCodeDownloadURL = qrCodeGenerator.generateQRCodeAndUpload(locationEntity.getName());
+        String locationPath = locationEntity.getEventEntity().getEventName() + "/"
+                + locationEntity.getEventEntity().getId() + "/"
+                + locationEntity.getName();
+        String qrCodeDownloadURL = qrCodeGenerator.generateQRCodeAndUpload(locationPath);
         locationEntity.setQrCodeUrl(qrCodeDownloadURL);
         return locationRepository.save(locationEntity);
     }
