@@ -35,14 +35,9 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Override
-    public List<LocationEntity> getLocationByEvent(EventEntity event) {
-        if (locationRepository.findByEventEntity(event).isEmpty()){
-            return null;
-        } else {
-            return StreamSupport.stream(
-                    locationRepository.findByEventEntity(event).spliterator(), false).collect(Collectors.toList());
-        }
-
+    public Optional<List<LocationEntity>> getLocationByEvent(EventEntity event) {
+        List<LocationEntity> locations = locationRepository.findByEventEntity(event);
+        return locations.isEmpty() ? Optional.empty() : Optional.of(locations);
     }
 
     @Override
@@ -51,11 +46,16 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Override
+    public Boolean isExists(Long id) {
+        return locationRepository.existsById(id);
+    }
+
+    @Override
     public LocationEntity updateLocation(Long id, LocationEntity location) {
         return locationRepository.findById(id).map(existingLocation -> {
-            if (location.getName() != null){existingLocation.setName(location.getName());}
-            if (location.getHint() != null){existingLocation.setHint(location.getHint());}
-            if (location.getChallenge() != null){existingLocation.setChallenge(location.getChallenge());}
+            if (location.getName() != null && location.getName() != ""){existingLocation.setName(location.getName());}
+            if (location.getHint() != null && location.getHint() != ""){existingLocation.setHint(location.getHint());}
+            if (location.getChallenge() != null && location.getChallenge() != ""){existingLocation.setChallenge(location.getChallenge());}
 
             return locationRepository.save(existingLocation);
         }).orElseThrow(() ->
