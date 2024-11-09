@@ -53,9 +53,9 @@ public class LocationServiceImpl implements LocationService {
     @Override
     public LocationEntity updateLocation(Long id, LocationEntity location) {
         return locationRepository.findById(id).map(existingLocation -> {
-            if (location.getName() != null && location.getName() != ""){existingLocation.setName(location.getName());}
-            if (location.getHint() != null && location.getHint() != ""){existingLocation.setHint(location.getHint());}
-            if (location.getChallenge() != null && location.getChallenge() != ""){existingLocation.setChallenge(location.getChallenge());}
+            if (location.getName() != null && !location.getName().isBlank()){existingLocation.setName(location.getName());}
+            if (location.getHint() != null && !location.getHint().isBlank()){existingLocation.setHint(location.getHint());}
+            if (location.getChallenge() != null && !location.getChallenge().isBlank()){existingLocation.setChallenge(location.getChallenge());}
 
             return locationRepository.save(existingLocation);
         }).orElseThrow(() ->

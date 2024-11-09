@@ -12,17 +12,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ProgressDto {
-
-    private Long id;
-
-    private UserEntity userEntity;
-
-    private EventEntity eventEntity;
-
-    private LocationEntity locationEntity;
-
-    private String scanTime;
+public class ProgressSummaryDto {
 
     private Integer score;
+
+    private String eventName;
+
+    private Integer numberOfScannedQRCodes;
 }
