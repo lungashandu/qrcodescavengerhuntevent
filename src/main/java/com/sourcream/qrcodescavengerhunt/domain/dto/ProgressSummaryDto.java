@@ -1,8 +1,5 @@
 package com.sourcream.qrcodescavengerhunt.domain.dto;
 
-import com.sourcream.qrcodescavengerhunt.domain.entities.EventEntity;
-import com.sourcream.qrcodescavengerhunt.domain.entities.LocationEntity;
-import com.sourcream.qrcodescavengerhunt.domain.entities.UserEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,5 +15,5 @@ public class ProgressSummaryDto {
 
     private String eventName;
 
-    private Integer numberOfScannedQRCodes;
+    private Long count;
 }

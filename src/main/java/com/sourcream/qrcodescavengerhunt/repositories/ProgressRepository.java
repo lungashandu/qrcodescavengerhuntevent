@@ -16,13 +16,11 @@ import java.util.Optional;
 public interface ProgressRepository extends JpaRepository<ProgressEntity, Long> {
     List<ProgressEntity> findByUserEntityAndEventEntity(UserEntity user, EventEntity event);
 
-    @Query("SELECT p FROM ProgressEntity p WHERE p.userEntity =:user AND p.eventEntity =:event ORDER BY p.scanTime DESC")
-    Optional<ProgressEntity> findLatestScoreByUserEntityAndEventEntity(@Param("user")UserEntity user, @Param("event") EventEntity event);
+    Optional<ProgressEntity> findFirstByUserEntityAndEventEntityOrderByScanTimeDesc(@Param("user")UserEntity user, @Param("event") EventEntity event);
 
-    @Query("SELECT new com.example.ProgressSummaryDTO(p.score, e.eventName, COUNT(p)) " +
+    @Query("SELECT new com.sourcream.qrcodescavengerhunt.domain.entities.ProgressSummary(SUM(p.score), e.eventName, COUNT(p)) " +
             "FROM ProgressEntity p JOIN p.eventEntity e " +
-            "WHERE p.userEntity = :user AND p.eventEntity = :event " +
-            "GROUP BY p.score, e.eventName")
+            "WHERE p.userEntity = :user AND p.eventEntity = :event")
     ProgressSummary getProgressSummary(@Param("user") UserEntity user, @Param("event") EventEntity event);
 
 }

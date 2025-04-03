@@ -12,11 +12,23 @@ public class CalculateScore {
 
     public int totalScore(String eventStartDate, int noOfLocationsScanned) {
         final int BASESCORE = 100;
-        String timeNow = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE);
-        Long daysPassed = ChronoUnit.DAYS.between(
-                LocalDate.parse(eventStartDate,DateTimeFormatter.ISO_DATE),
-                LocalDate.parse(timeNow));
-        return (BASESCORE + scorePerLocationScanned(noOfLocationsScanned)) + Math.max(BASESCORE - (int)(daysPassed * 5), 0);
+        final int MAX_BONUS = 50;
+        final int PENALTY_RATE = 2;
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime eventStart = LocalDateTime.parse(eventStartDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+
+        long daysPassed = ChronoUnit.DAYS.between(
+                eventStart.toLocalDate(),
+                now.toLocalDate());
+
+        long timePassed = ChronoUnit.HOURS.between(
+                eventStart,
+                now);
+
+        int timeBonus = Math.max(0, MAX_BONUS - (int) (timePassed * PENALTY_RATE));
+
+        return (BASESCORE + timeBonus + scorePerLocationScanned(noOfLocationsScanned)) + Math.max(BASESCORE - (int)(daysPassed * 5), 0);
     }
 
     private int scorePerLocationScanned(int locationsScanned) {

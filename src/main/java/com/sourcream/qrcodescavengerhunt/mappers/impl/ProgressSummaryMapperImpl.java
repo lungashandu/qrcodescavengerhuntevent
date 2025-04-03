@@ -4,12 +4,14 @@ import com.sourcream.qrcodescavengerhunt.domain.entities.ProgressSummary;
 import com.sourcream.qrcodescavengerhunt.domain.dto.ProgressSummaryDto;
 import com.sourcream.qrcodescavengerhunt.mappers.Mapper;
 import org.modelmapper.ModelMapper;
+import org.springframework.stereotype.Component;
 
-public class ProgressMapperImpl implements Mapper<ProgressSummary, ProgressSummaryDto> {
+@Component
+public class ProgressSummaryMapperImpl implements Mapper<ProgressSummary, ProgressSummaryDto> {
 
     private final ModelMapper modelMapper;
 
-    public ProgressMapperImpl(ModelMapper modelMapper) {
+    public ProgressSummaryMapperImpl(ModelMapper modelMapper) {
         this.modelMapper = modelMapper;
     }
 

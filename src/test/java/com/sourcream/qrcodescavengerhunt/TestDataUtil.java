@@ -1,9 +1,6 @@
 package com.sourcream.qrcodescavengerhunt;
 
-import com.sourcream.qrcodescavengerhunt.domain.entities.EventEntity;
-import com.sourcream.qrcodescavengerhunt.domain.entities.LocationEntity;
-import com.sourcream.qrcodescavengerhunt.domain.entities.Role;
-import com.sourcream.qrcodescavengerhunt.domain.entities.UserEntity;
+import com.sourcream.qrcodescavengerhunt.domain.entities.*;
 
 public final class TestDataUtil {
 
@@ -45,7 +42,7 @@ public final class TestDataUtil {
                 .id(1l)
                 .eventName("Summer Scavenger Hunt")
                 .description("A fun-filled scavenger hunt around the city to explore hidden gems and landmarks.")
-                .startTime("2024-07-01T10:00:00")
+                .startTime("2024-07-01T10:23:11")
                 .endTime("2024-07-01T16:00:00")
                 .userEntity(user)
                 .build();
@@ -103,6 +100,77 @@ public final class TestDataUtil {
                 .qrCodeUrl("https://firebase.com/qrcode/museum.png")
                 .hint("Find the entrance with the lion statues")
                 .challenge("Snap a selfie with one of the lions")
+                .build();
+    }
+
+    public static ProgressEntity createTestProgressA(final UserEntity user,
+                                                     final EventEntity event,
+                                                     final LocationEntity location){
+        return ProgressEntity.builder()
+                .id(1L)
+                .userEntity(user)
+                .eventEntity(event)
+                .locationEntity(location)
+                .scanTime("2024-09-20T10:45:00")
+                .score(10)
+                .build();
+    }
+
+    public static ProgressEntity createTestProgressB(final UserEntity user,
+                                                     final EventEntity event,
+                                                     final LocationEntity location){
+        return ProgressEntity.builder()
+                .id(2L)
+                .userEntity(user)
+                .eventEntity(event)
+                .locationEntity(location)
+                .scanTime("2024-09-20T12:30:00")
+                .score(15)
+                .build();
+    }
+
+    public static ProgressEntity createTestProgressC(final UserEntity user,
+                                                     final EventEntity event,
+                                                     final LocationEntity location){
+        return ProgressEntity.builder()
+                .id(3L)
+                .userEntity(user)
+                .eventEntity(event)
+                .locationEntity(location)
+                .scanTime("2024-09-20T14:20:00")
+                .score(20)
+                .build();
+    }
+
+    public static ProgressSummary createTestProgressSummary(){
+        return ProgressSummary.builder()
+                .score(45L)
+                .eventName("Summer Scavenger Hunt")
+                .count(3L)
+                .build();
+    }
+
+    public static ProgressSummary createTestProgressSummaryForOneRecord(){
+        return ProgressSummary.builder()
+                .score(10L)
+                .eventName("Summer Scavenger Hunt")
+                .count(1L)
+                .build();
+    }
+
+    public static ProgressSummary createTestProgressSummaryUrl(){
+        return ProgressSummary.builder()
+                .score(100L)
+                .eventName("Summer Scavenger Hunt")
+                .count(1L)
+                .build();
+    }
+
+    public static ProgressSummary createTestProgressSummaryForAnonymousUser(){
+        return ProgressSummary.builder()
+                .score(null)
+                .eventName("Summer Scavenger Hunt")
+                .count(1L)
                 .build();
     }
 }

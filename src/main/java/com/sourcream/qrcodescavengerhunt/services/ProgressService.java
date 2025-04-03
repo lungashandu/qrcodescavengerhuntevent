@@ -14,5 +14,4 @@ public interface ProgressService {
 
     Integer calculateScoreForScan(UserEntity user, EventEntity event);
 
-    Integer getLatestScore(UserEntity user, EventEntity event);
 }

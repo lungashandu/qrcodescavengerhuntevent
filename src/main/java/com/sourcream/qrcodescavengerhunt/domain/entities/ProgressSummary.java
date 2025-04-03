@@ -1,18 +1,21 @@
 package com.sourcream.qrcodescavengerhunt.domain.entities;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class ProgressSummary {
-    private Integer score;
-
+    private Long score;
     private String eventName;
+    private Long count;
 
-    private Integer numberOfScannedQRCodes;
+    public ProgressSummary(Long score, String eventName, Long count) {
+        this.score = score;
+        this.eventName = eventName;
+        this.count = count;
+    }
+
 }

@@ -26,7 +26,7 @@ public class ProgressEntity {
     @JoinColumn(name = "eventId")
     private EventEntity eventEntity;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "locationId")
     private LocationEntity locationEntity;
 

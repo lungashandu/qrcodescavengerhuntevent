@@ -20,7 +20,7 @@ services:
       retries: 5
 
   flyway:
-    image: flyway/flyway:9
+    image: flyway/flyway:latest
     container_name: flyway_migration
     depends_on:
       db:
@@ -29,16 +29,15 @@ services:
       - FLYWAY_URL=jdbc:postgresql://db:5432/postgres
       - FLYWAY_USER=postgres
       - FLYWAY_PASSWORD=/run/secrets/db_password
-      - FLYWAY_SCHEMAS=public
     secrets:
       - db_password
     volumes:
       - ./sql/migrations:/flyway/sql
-    command: -baselineOnMigrate=true migrate
+
 
 
 volumes:
   db-data:
 secrets:
   db_password:
-    file: [REDACTED]
+    file: db/ifihlo.txt
