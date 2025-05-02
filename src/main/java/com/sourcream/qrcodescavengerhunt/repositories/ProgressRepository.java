@@ -23,4 +23,27 @@ public interface ProgressRepository extends JpaRepository<ProgressEntity, Long> 
             "WHERE p.userEntity = :user AND p.eventEntity = :event")
     ProgressSummary getProgressSummary(@Param("user") UserEntity user, @Param("event") EventEntity event);
 
+    @Query("SELECT u.fullname, u.email, SUM(p.score) as totalScore, COUNT(p) as locationsScanned " +
+            "FROM ProgressEntity p " +
+            "JOIN p.userEntity u " +
+            "WHERE p.eventEntity = :event " +
+            "GROUP BY u.fullname, u.email " +  // Group by both name and email
+            "ORDER BY totalScore DESC " +
+            "LIMIT 10")
+    List<Object[]> findTop10LeaderboardDataByEvent(EventEntity event);
+
+    @Query("SELECT u.fullname, u.email, SUM(p.score) as totalScore, COUNT(p) as locationsScanned " +
+            "FROM ProgressEntity p " +
+            "JOIN p.userEntity u " +
+            "WHERE p.eventEntity = :event " +
+            "GROUP BY u.fullname, u.email " +
+            "ORDER BY totalScore DESC")
+    List<Object[]> findAllLeaderboardDataByEvent(EventEntity event);
+
+    @Query("SELECT u.fullname, u.email, SUM(p.score) as totalScore, COUNT(p) as locationsScanned " +
+            "FROM ProgressEntity p " +
+            "JOIN p.userEntity u " +
+            "WHERE p.eventEntity.id = :eventId AND u.email = :email " +
+            "GROUP BY u.fullname, u.email")
+    Object[] findUserLeaderboardData(@Param("email") String email, @Param("eventId") Long eventId);
 }
