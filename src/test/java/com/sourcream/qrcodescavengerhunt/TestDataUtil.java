@@ -1,6 +1,7 @@
 package com.sourcream.qrcodescavengerhunt;
 
 import com.sourcream.qrcodescavengerhunt.domain.entities.*;
+import com.sourcream.qrcodescavengerhunt.domain.projection.UserLeaderboardProjection;
 
 public final class TestDataUtil {
 
@@ -172,5 +173,77 @@ public final class TestDataUtil {
                 .eventName("Summer Scavenger Hunt")
                 .count(1L)
                 .build();
+    }
+
+    public static UserLeaderboardProjection createLeaderboardProjectionA() {
+        return new UserLeaderboardProjection() {
+            @Override
+            public String getFullname() {
+                return "John Doe";
+            }
+
+            @Override
+            public String getEmail() {
+                return "john.doe@example.com";
+            }
+
+            @Override
+            public Long getTotalScore() {
+                return 45L;
+            }
+
+            @Override
+            public Long getLocationsScanned() {
+                return 3L;
+            }
+        };
+    }
+
+    public static UserLeaderboardProjection createLeaderboardProjectionB() {
+        return new UserLeaderboardProjection() {
+            @Override
+            public String getFullname() {
+                return "Jane Smith";
+            }
+
+            @Override
+            public String getEmail() {
+                return "jane.smith@example.com";
+            }
+
+            @Override
+            public Long getTotalScore() {
+                return 25L;
+            }
+
+            @Override
+            public Long getLocationsScanned() {
+                return 2L;
+            }
+        };
+    }
+
+    public static UserLeaderboardProjection createLeaderboardProjectionC() {
+        return new UserLeaderboardProjection() {
+            @Override
+            public String getFullname() {
+                return "Alice Williams";
+            }
+
+            @Override
+            public String getEmail() {
+                return "alice.williams@example.com";
+            }
+
+            @Override
+            public Long getTotalScore() {
+                return 10L;
+            }
+
+            @Override
+            public Long getLocationsScanned() {
+                return 1L;
+            }
+        };
     }
 }

@@ -112,11 +112,11 @@ public class ProgressServiceImpl implements ProgressService {
 
         List<LeaderboardDataDto> internalData = progressRepository.findTop10LeaderboardDataByEvent(event.get())
                 .stream()
-                .map(result -> LeaderboardDataDto.builder()
-                        .fullname((String) result[0])
-                        .email((String) result[1])
-                        .score(((Number) result[2]).longValue())
-                        .scannedLocations(((Number) result[3]).longValue())
+                .map(projection -> LeaderboardDataDto.builder()
+                        .fullname(projection.getFullname())
+                        .email(projection.getEmail())
+                        .score(projection.getTotalScore())
+                        .scannedLocations(projection.getLocationsScanned())
                         .build())
                 .toList();
 
@@ -132,11 +132,11 @@ public class ProgressServiceImpl implements ProgressService {
 
         return progressRepository.findAllLeaderboardDataByEvent(event.get())
                 .stream()
-                .map(result -> LeaderboardDataDto.builder()
-                        .fullname((String) result[0])
-                        .email((String) result[1])
-                        .score(((Number) result[2]).longValue())
-                        .scannedLocations(((Number) result[3]).longValue())
+                .map(projection -> LeaderboardDataDto.builder()
+                        .fullname(projection.getFullname())
+                        .email(projection.getEmail())
+                        .score(projection.getTotalScore())
+                        .scannedLocations(projection.getLocationsScanned())
                         .build())
                 .toList();
     }
@@ -152,22 +152,20 @@ public class ProgressServiceImpl implements ProgressService {
 
     @Override
     public LeaderboardDataDto getIndividualUserStats(UserEntity user, Long eventId) {
-        Object[] result = progressRepository.findUserLeaderboardData(user.getEmail(), eventId);
-        if (result == null) {
-            return LeaderboardDataDto.builder()
-                    .fullname(user.getFullname())
-                    .email(user.getEmail())
-                    .score(0L)
-                    .scannedLocations(0L)
-                    .build();
-        }
 
-        return LeaderboardDataDto.builder()
-                .fullname((String) result[0])
-                .email((String) result[1])
-                .score(((Number) result[2]).longValue())
-                .scannedLocations(((Number) result[3]).longValue())
-                .build();
+        return progressRepository.findUserLeaderboardData(user.getEmail(), eventId)
+                .map(projection -> LeaderboardDataDto.builder()
+                        .fullname(projection.getFullname())
+                        .email(projection.getEmail())
+                        .score(projection.getTotalScore())
+                        .scannedLocations(projection.getLocationsScanned())
+                        .build())
+                .orElseGet(() -> LeaderboardDataDto.builder()
+                        .fullname(user.getFullname())
+                        .email(user.getEmail())
+                        .score(0L)
+                        .scannedLocations(0L)
+                        .build());
     }
 
     private LeaderboardEntryDto convertToEntry(LeaderboardDataDto data, List<LeaderboardDataDto> fullList) {

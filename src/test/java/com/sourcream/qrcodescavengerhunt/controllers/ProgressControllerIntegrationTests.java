@@ -148,4 +148,6 @@ public class ProgressControllerIntegrationTests {
                 MockMvcResultMatchers.jsonPath("$.score").value(summary.getScore())
         );
     }
+
+
 }

@@ -4,6 +4,7 @@ import com.sourcream.qrcodescavengerhunt.domain.entities.EventEntity;
 import com.sourcream.qrcodescavengerhunt.domain.entities.ProgressEntity;
 import com.sourcream.qrcodescavengerhunt.domain.entities.ProgressSummary;
 import com.sourcream.qrcodescavengerhunt.domain.entities.UserEntity;
+import com.sourcream.qrcodescavengerhunt.domain.projection.UserLeaderboardProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -23,27 +24,30 @@ public interface ProgressRepository extends JpaRepository<ProgressEntity, Long> 
             "WHERE p.userEntity = :user AND p.eventEntity = :event")
     ProgressSummary getProgressSummary(@Param("user") UserEntity user, @Param("event") EventEntity event);
 
-    @Query("SELECT u.fullname, u.email, SUM(p.score) as totalScore, COUNT(p) as locationsScanned " +
-            "FROM ProgressEntity p " +
-            "JOIN p.userEntity u " +
-            "WHERE p.eventEntity = :event " +
-            "GROUP BY u.fullname, u.email " +  // Group by both name and email
-            "ORDER BY totalScore DESC " +
-            "LIMIT 10")
-    List<Object[]> findTop10LeaderboardDataByEvent(EventEntity event);
-
-    @Query("SELECT u.fullname, u.email, SUM(p.score) as totalScore, COUNT(p) as locationsScanned " +
+    @Query("SELECT u.fullname as fullname, u.email as email, " +
+            "SUM(p.score) as totalScore, COUNT(p) as locationsScanned " +
             "FROM ProgressEntity p " +
             "JOIN p.userEntity u " +
             "WHERE p.eventEntity = :event " +
             "GROUP BY u.fullname, u.email " +
-            "ORDER BY totalScore DESC")
-    List<Object[]> findAllLeaderboardDataByEvent(EventEntity event);
+            "ORDER BY SUM(p.score) DESC " +
+            "LIMIT 10")
+    List<UserLeaderboardProjection> findTop10LeaderboardDataByEvent(EventEntity event);
 
-    @Query("SELECT u.fullname, u.email, SUM(p.score) as totalScore, COUNT(p) as locationsScanned " +
+    @Query("SELECT u.fullname as fullname, u.email as email, " +
+            "SUM(p.score) as totalScore, COUNT(p) as locationsScanned " +
+            "FROM ProgressEntity p " +
+            "JOIN p.userEntity u " +
+            "WHERE p.eventEntity = :event " +
+            "GROUP BY u.fullname, u.email " +
+            "ORDER BY SUM(p.score) DESC")
+    List<UserLeaderboardProjection> findAllLeaderboardDataByEvent(EventEntity event);
+
+    @Query("SELECT u.fullname as fullname, u.email as email, " +
+            "SUM(p.score) as totalScore, COUNT(p) as locationsScanned " +
             "FROM ProgressEntity p " +
             "JOIN p.userEntity u " +
             "WHERE p.eventEntity.id = :eventId AND u.email = :email " +
             "GROUP BY u.fullname, u.email")
-    Object[] findUserLeaderboardData(@Param("email") String email, @Param("eventId") Long eventId);
+    Optional<UserLeaderboardProjection> findUserLeaderboardData(@Param("email") String email, @Param("eventId") Long eventId);
 }
