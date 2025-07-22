@@ -1,7 +1,10 @@
 package com.sourcream.qrcodescavengerhunt.controllers;
 
 import com.sourcream.qrcodescavengerhunt.TestDataUtil;
-import com.sourcream.qrcodescavengerhunt.domain.entities.*;
+import com.sourcream.qrcodescavengerhunt.domain.entities.EventEntity;
+import com.sourcream.qrcodescavengerhunt.domain.entities.LocationEntity;
+import com.sourcream.qrcodescavengerhunt.domain.entities.ProgressSummary;
+import com.sourcream.qrcodescavengerhunt.domain.entities.UserEntity;
 import com.sourcream.qrcodescavengerhunt.repositories.ProgressRepository;
 import com.sourcream.qrcodescavengerhunt.security.WithMockOidcUser;
 import com.sourcream.qrcodescavengerhunt.security.config.TestSecurityConfig;
@@ -9,22 +12,18 @@ import com.sourcream.qrcodescavengerhunt.services.EventService;
 import com.sourcream.qrcodescavengerhunt.services.LocationService;
 import com.sourcream.qrcodescavengerhunt.services.ProgressService;
 import com.sourcream.qrcodescavengerhunt.services.UserService;
-import com.sourcream.qrcodescavengerhunt.services.impl.ProgressServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
@@ -57,8 +56,6 @@ public class ProgressControllerIntegrationTests {
     private ProgressService progressService;
 
     private ProgressRepository progressRepository;
-
-    private static final Logger logger = LoggerFactory.getLogger(ProgressServiceImpl.class);
 
     @Autowired
     public ProgressControllerIntegrationTests(MockMvc mockMvc, UserService userService, EventService eventService, LocationService locationService, ProgressService progressService, ProgressRepository progressRepository) {
@@ -149,5 +146,198 @@ public class ProgressControllerIntegrationTests {
         );
     }
 
+    @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
+    public void testThatProgressReturnsCorrectForTop10Leaderboard() throws Exception {
+        UserEntity userA = TestDataUtil.createTestUserA();
+        userService.saveUser(userA);
+        UserEntity userB = TestDataUtil.createTestUserB();
+        userService.saveUser(userB);
+        UserEntity userC = TestDataUtil.createTestUserC();
+        userService.saveUser(userC);
+
+        EventEntity event = TestDataUtil.createTestEventA(null);
+        eventService.saveEvent(event);
+
+        LocationEntity locationA = TestDataUtil.createTestLocationA(event);
+        locationService.saveLocation(locationA);
+        LocationEntity locationB = TestDataUtil.createTestLocationB(event);
+        locationService.saveLocation(locationB);
+        LocationEntity locationC = TestDataUtil.createTestLocationC(event);
+        locationService.saveLocation(locationC);
+
+        //User A progress
+        setupAuthentication(userA.getEmail());
+        progressService.saveProgress(event.getId(), locationA.getId());
+        progressService.saveProgress(event.getId(), locationB.getId());
+        progressService.saveProgress(event.getId(), locationC.getId());
+
+        //User B progress
+        setupAuthentication(userB.getEmail());
+        progressService.saveProgress(event.getId(), locationA.getId());
+        progressService.saveProgress(event.getId(), locationB.getId());
+
+        //User C progress
+        setupAuthentication(userC.getEmail());
+        progressService.saveProgress(event.getId(), locationA.getId());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/progress/1/top")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].fullname").value(userA.getFullname()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].score").isNumber())
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].scannedLocations").value(3))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[1].fullname").value(userB.getFullname()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[1].scannedLocations").value(2))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[2].fullname").value(userC.getFullname()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[2].scannedLocations").value(1));
+    }
+
+    private void setupAuthentication(String email) {
+        OidcUser oidcUser = mock(OidcUser.class);
+        when(oidcUser.getEmail()).thenReturn(email);
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                oidcUser,
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_USER"))
+        );
+        SecurityContextHolder.getContext().setAuthentication(auth);
+    }
+
+    @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
+    public void testGetUserLeaderboardPositionReturnValidData() throws Exception {
+        UserEntity userA = TestDataUtil.createTestUserA();
+        userService.saveUser(userA);
+        UserEntity userB = TestDataUtil.createTestUserB();
+        userService.saveUser(userB);
+        UserEntity userC = TestDataUtil.createTestUserC();
+        userService.saveUser(userC);
+
+        EventEntity event = TestDataUtil.createTestEventA(null);
+        eventService.saveEvent(event);
+
+        LocationEntity locationA = TestDataUtil.createTestLocationA(event);
+        locationService.saveLocation(locationA);
+        LocationEntity locationB = TestDataUtil.createTestLocationB(event);
+        locationService.saveLocation(locationB);
+        LocationEntity locationC = TestDataUtil.createTestLocationC(event);
+        locationService.saveLocation(locationC);
+
+        //User A progress
+        setupAuthentication(userA.getEmail());
+        progressService.saveProgress(event.getId(), locationA.getId());
+        progressService.saveProgress(event.getId(), locationB.getId());
+        progressService.saveProgress(event.getId(), locationC.getId());
+
+        //User B progress
+        setupAuthentication(userB.getEmail());
+        progressService.saveProgress(event.getId(), locationA.getId());
+        progressService.saveProgress(event.getId(), locationB.getId());
+
+        //User C progress
+        setupAuthentication(userC.getEmail());
+        progressService.saveProgress(event.getId(), locationA.getId());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/progress/1/leaderboard/me")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.fullname").value(userC.getFullname()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.score").isNumber())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.scannedLocations").value(1));
+    }
+
+    @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
+    public void testGetTopLeaderboardForNonExistentEventReturnsEmptyList() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/progress/1/top"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$").isArray())
+                .andExpect(MockMvcResultMatchers.jsonPath("$").isEmpty());
+    }
+
+    @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
+    public void testGetUserLeaderboardPositionForUserWithNoProgress() throws Exception {
+        UserEntity userA = TestDataUtil.createTestUserA();
+        userService.saveUser(userA);
+        UserEntity userB = TestDataUtil.createTestUserB();
+        userService.saveUser(userB);
+        UserEntity userC = TestDataUtil.createTestUserC();
+        userService.saveUser(userC);
+
+        EventEntity event = TestDataUtil.createTestEventA(null);
+        eventService.saveEvent(event);
+
+        LocationEntity locationA = TestDataUtil.createTestLocationA(event);
+        locationService.saveLocation(locationA);
+        LocationEntity locationB = TestDataUtil.createTestLocationB(event);
+        locationService.saveLocation(locationB);
+        LocationEntity locationC = TestDataUtil.createTestLocationC(event);
+        locationService.saveLocation(locationC);
+
+        //User A progress
+        setupAuthentication(userA.getEmail());
+        progressService.saveProgress(event.getId(), locationA.getId());
+        progressService.saveProgress(event.getId(), locationB.getId());
+        progressService.saveProgress(event.getId(), locationC.getId());
+
+        //User B progress
+        setupAuthentication(userB.getEmail());
+        progressService.saveProgress(event.getId(), locationA.getId());
+        progressService.saveProgress(event.getId(), locationB.getId());
+
+        //User C progress
+        setupAuthentication(userC.getEmail());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/progress/1/leaderboard/me")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.fullname").value(userC.getFullname()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.score").value(0))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.scannedLocations").value(0));
+    }
+
+    @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
+    public void testLeaderboardOrderByScoreDescending() throws Exception {
+        UserEntity userA = TestDataUtil.createTestUserA();
+        userService.saveUser(userA);
+        UserEntity userB = TestDataUtil.createTestUserB();
+        userService.saveUser(userB);
+        UserEntity userC = TestDataUtil.createTestUserC();
+        userService.saveUser(userC);
+
+        EventEntity event = TestDataUtil.createTestEventA(null);
+        eventService.saveEvent(event);
+
+        LocationEntity locationA = TestDataUtil.createTestLocationA(event);
+        locationService.saveLocation(locationA);
+        LocationEntity locationB = TestDataUtil.createTestLocationB(event);
+        locationService.saveLocation(locationB);
+        LocationEntity locationC = TestDataUtil.createTestLocationC(event);
+        locationService.saveLocation(locationC);
+
+        //User A progress
+        setupAuthentication(userA.getEmail());
+        progressService.saveProgress(event.getId(), locationA.getId());
+        progressService.saveProgress(event.getId(), locationB.getId());
+        progressService.saveProgress(event.getId(), locationC.getId());
+
+        //User B progress
+        setupAuthentication(userB.getEmail());
+        progressService.saveProgress(event.getId(), locationA.getId());
+        progressService.saveProgress(event.getId(), locationB.getId());
+
+        //User C progress
+        setupAuthentication(userC.getEmail());
+        progressService.saveProgress(event.getId(), locationA.getId());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/progress/1/top"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].fullname").value("John Doe"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[1].fullname").value("Jane Smith"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[2].fullname").value("Alice Williams"));
+    }
 
 }

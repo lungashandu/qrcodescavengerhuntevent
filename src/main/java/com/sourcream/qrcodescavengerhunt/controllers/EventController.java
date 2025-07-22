@@ -7,8 +7,11 @@ import com.sourcream.qrcodescavengerhunt.services.EventService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -25,10 +28,18 @@ public class EventController {
 
     @PostMapping("/events")
     public ResponseEntity<EventDto> createEvent(@RequestBody EventDto eventDto){
-        EventEntity eventEntity = eventMapper.mapFrom(eventDto);
-        EventEntity savedEvent = eventService.saveEvent(eventEntity);
+        try {
+            EventEntity eventEntity = eventMapper.mapFrom(eventDto);
+            EventEntity savedEvent = eventService.saveEvent(eventEntity);
+            return new ResponseEntity<>(eventMapper.mapTo(savedEvent), HttpStatus.CREATED);
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .body((EventDto) Map.of("error", e.getReason(), "timestamp", Instant.now()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body((EventDto) Map.of("error", "Unexpected error", "timestamp", Instant.now()));
+        }
 
-        return new ResponseEntity<>(eventMapper.mapTo(savedEvent), HttpStatus.CREATED);
     }
 
     @GetMapping("/events/{id}")

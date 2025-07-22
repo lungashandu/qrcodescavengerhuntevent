@@ -145,6 +145,14 @@ public class ProgressServiceImpl implements ProgressService {
     public LeaderboardEntryDto getUserLeaderboardPosition(UserEntity user, Long eventId) {
         LeaderboardDataDto userData = getIndividualUserStats(user, eventId);
 
+        if (userData.getScore() == 0L && userData.getScannedLocations() == 0L){
+            return LeaderboardEntryDto.builder()
+                    .fullname(user.getFullname())
+                    .score(0L)
+                    .scannedLocations(0L)
+                    .build();
+        }
+
         List<LeaderboardDataDto> leaderboardData = getFullLeaderboardData(eventId);
 
         return convertToEntry(userData, leaderboardData);
@@ -169,6 +177,14 @@ public class ProgressServiceImpl implements ProgressService {
     }
 
     private LeaderboardEntryDto convertToEntry(LeaderboardDataDto data, List<LeaderboardDataDto> fullList) {
+        if (fullList == null || fullList.isEmpty()) {
+            return LeaderboardEntryDto.builder()
+                    .fullname(data.getFullname())
+                    .score(data.getScore())
+                    .scannedLocations(data.getScannedLocations())
+                    .build();
+        }
+
         Map<String, Long> nameCounts = fullList.stream()
                 .collect(Collectors.groupingBy(
                         LeaderboardDataDto::getFullname,
@@ -176,7 +192,7 @@ public class ProgressServiceImpl implements ProgressService {
                 ));
 
         String displayName = data.getFullname();
-        if (nameCounts.get(data.getFullname()) > 1) {
+        if (nameCounts.getOrDefault(data.getFullname(), 0L) > 1) {
             String emailPrefix = data.getEmail().split("@")[0];
             displayName = data.getFullname() + " (" + emailPrefix + ")";
         }
@@ -198,7 +214,7 @@ public class ProgressServiceImpl implements ProgressService {
         return internalData.stream()
                 .map(data -> {
                     String displayName = data.getFullname();
-                    if (nameCounts.get(data.getEmail()) > 1) {
+                    if (nameCounts.get(data.getFullname()) > 1) {
                         String emailPrefix = data.getEmail().split("@")[0];
                         displayName = data.getFullname() + " (" + emailPrefix + ")";
                     }

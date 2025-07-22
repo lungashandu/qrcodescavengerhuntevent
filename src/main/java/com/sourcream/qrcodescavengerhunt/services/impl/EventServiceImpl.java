@@ -5,10 +5,14 @@ import com.sourcream.qrcodescavengerhunt.domain.entities.UserEntity;
 import com.sourcream.qrcodescavengerhunt.repositories.EventRepository;
 import com.sourcream.qrcodescavengerhunt.repositories.UserRepository;
 import com.sourcream.qrcodescavengerhunt.services.EventService;
+import com.sourcream.qrcodescavengerhunt.util.UserContext;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,23 +26,25 @@ public class EventServiceImpl implements EventService {
 
     private UserRepository userRepository;
 
-    public EventServiceImpl(EventRepository eventRepository, UserRepository userRepository){
+    private UserContext userContext;
+
+    public EventServiceImpl(EventRepository eventRepository, UserRepository userRepository, UserContext userContext) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
+        this.userContext = userContext;
     }
 
     @Override
     public EventEntity saveEvent(EventEntity event) {
-        OidcUser oidcUser = (OidcUser) SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getPrincipal();
-        Optional<UserEntity> user = userRepository.findByEmail(oidcUser.getEmail());
-        if(user.isPresent()){
-            event.setUserEntity(user.get());
-        }else {
-            throw new RuntimeException("User unauthorized");
-        }
+
+        String email = userContext.getCurrentUserEmail();
+        UserEntity user = userRepository.findByEmail(email)
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "User not found. Please complete registration first."
+                        ));
+
+        event.setUserEntity(user);
         return eventRepository.save(event);
     }
 

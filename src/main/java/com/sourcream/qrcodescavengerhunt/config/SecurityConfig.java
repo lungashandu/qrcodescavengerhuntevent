@@ -5,6 +5,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtDecoders;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 
@@ -13,9 +16,11 @@ import org.springframework.security.web.authentication.SavedRequestAwareAuthenti
 public class SecurityConfig {
 
     CustomOidcUserService customOidcUserService;
+    CustomJwtAuthenticationConverter customJwtAuthenticationConverter;
 
-    public SecurityConfig(CustomOidcUserService customOidcUserService) {
+    public SecurityConfig(CustomOidcUserService customOidcUserService, CustomJwtAuthenticationConverter customJwtAuthenticationConverter) {
         this.customOidcUserService = customOidcUserService;
+        this.customJwtAuthenticationConverter = customJwtAuthenticationConverter;
     }
 
     @Bean
@@ -31,6 +36,11 @@ public class SecurityConfig {
                         )
                         .successHandler(savedRequestSuccessHandler())
                 )
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt
+                                .jwtAuthenticationConverter(customJwtAuthenticationConverter)
+                                .decoder(oidcIdTokenDecoder())))
+                .csrf(AbstractHttpConfigurer::disable)
                 .logout(logout -> logout.logoutSuccessUrl("/").permitAll());
 
         return http.build();
@@ -41,5 +51,10 @@ public class SecurityConfig {
         SavedRequestAwareAuthenticationSuccessHandler handler = new SavedRequestAwareAuthenticationSuccessHandler();
         handler.setDefaultTargetUrl("/");
         return handler;
+    }
+
+    @Bean
+    public JwtDecoder oidcIdTokenDecoder() {
+        return JwtDecoders.fromIssuerLocation("https://accounts.google.com");
     }
 }

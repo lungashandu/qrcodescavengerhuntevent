@@ -24,15 +24,23 @@ public class CustomOidcUserService extends OidcUserService {
     public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
         OidcUser oidcUser = super.loadUser(userRequest);
         System.out.println("Processing OIDC user: " + oidcUser.getEmail());
+        try {
+            processOidcUser(oidcUser);
+            System.out.println("OIDC user, " + oidcUser.getEmail() + ", saved.");
+        } catch (Exception e) {
+            System.out.println("Failed to process OIDC user: " + e.getMessage());
+            throw e;
+        }
 
+        return oidcUser;
+    }
+
+    public void processOidcUser(OidcUser oidcUser) {
         String email = oidcUser.getEmail();
         userService.getUserByEmail(email)
                 .orElseGet(() -> {
                     UserEntity newUser = userUtil.formatUser(oidcUser);
-                    UserEntity savedUser = userService.saveUser(newUser);
-                    System.out.println(savedUser);
-                    return savedUser;
+                    return userService.saveUser(newUser);
                 });
-        return oidcUser;
     }
 }
