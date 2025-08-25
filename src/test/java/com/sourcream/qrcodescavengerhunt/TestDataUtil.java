@@ -3,6 +3,8 @@ package com.sourcream.qrcodescavengerhunt;
 import com.sourcream.qrcodescavengerhunt.domain.entities.*;
 import com.sourcream.qrcodescavengerhunt.domain.projection.UserLeaderboardProjection;
 
+import java.time.Instant;
+
 public final class TestDataUtil {
 
     public static UserEntity createTestUserA() {
@@ -245,5 +247,14 @@ public final class TestDataUtil {
                 return 1L;
             }
         };
+    }
+
+    public static ScanEntity createTestScanA() {
+        return ScanEntity.builder()
+                .id(1L)
+                .userId(1L)
+                .locationId(1L)
+                .scannedAt(Instant.parse("2023-01-15T10:30:00Z"))
+                .build();
     }
 }

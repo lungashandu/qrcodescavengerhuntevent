@@ -3,26 +3,25 @@ package com.sourcream.qrcodescavengerhunt.services.impl;
 import com.sourcream.qrcodescavengerhunt.domain.dto.LeaderboardDataDto;
 import com.sourcream.qrcodescavengerhunt.domain.dto.LeaderboardEntryDto;
 import com.sourcream.qrcodescavengerhunt.domain.entities.*;
-import com.sourcream.qrcodescavengerhunt.repositories.EventRepository;
-import com.sourcream.qrcodescavengerhunt.repositories.LocationRepository;
-import com.sourcream.qrcodescavengerhunt.repositories.ProgressRepository;
-import com.sourcream.qrcodescavengerhunt.repositories.UserRepository;
+import com.sourcream.qrcodescavengerhunt.repositories.*;
 import com.sourcream.qrcodescavengerhunt.services.ProgressService;
 import com.sourcream.qrcodescavengerhunt.util.CalculateScore;
+import com.sourcream.qrcodescavengerhunt.util.UserContext;
 import jakarta.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -33,53 +32,108 @@ public class ProgressServiceImpl implements ProgressService {
     CalculateScore calculateScore;
     EventRepository eventRepository;
     LocationRepository locationRepository;
-
     UserRepository userRepository;
+    ScanRepository scanRepository;
     private EntityManager entityManager;
+
+    UserContext userContext;
 
     private static final Logger logger = LoggerFactory.getLogger(ProgressServiceImpl.class);
 
-    public ProgressServiceImpl(ProgressRepository progressRepository, CalculateScore calculateScore, EventRepository eventRepository, LocationRepository locationRepository, UserRepository userRepository, EntityManager entityManager) {
+    public ProgressServiceImpl(ProgressRepository progressRepository,
+                               CalculateScore calculateScore,
+                               EventRepository eventRepository,
+                               LocationRepository locationRepository,
+                               UserRepository userRepository,
+                               ScanRepository scanRepository,
+                               EntityManager entityManager,
+                               UserContext userContext) {
         this.progressRepository = progressRepository;
         this.calculateScore = calculateScore;
         this.eventRepository = eventRepository;
         this.locationRepository = locationRepository;
         this.userRepository = userRepository;
+        this.scanRepository = scanRepository;
         this.entityManager = entityManager;
+        this.userContext = userContext;
     }
 
     @Override
     @Transactional
     public ProgressSummary saveProgress(Long eventID, Long locationID) {
-        if (eventID == null || locationID == null){
-            return null;
+        try {
+            if (eventID == null || locationID == null){
+                logger.warn("Attempted to save progress with null eventID = {} or locationID = {}", eventID, locationID);
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Event ID and Location ID must not be null");
+            }
+
+            String email = null;
+            try {
+                email = userContext.getCurrentUserEmail();
+            } catch (Exception e) {
+                logger.warn("No authenticated user found, continuing as anonymous");
+
+            }
+
+            Optional<UserEntity> user = email != null
+                    ? userRepository.findByEmail(email)
+                    : Optional.empty();
+
+            if(user.isPresent()){
+                if (!scanLocation(user.get().getId(), locationID)){
+                    logger.warn("Duplicate scan attempt by user = {} for location = {}", user.get().getId(), locationID);
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, "Cannot scan the same location multiple time");
+                }
+
+                ProgressEntity progress = progressEntityBuilder(eventID, locationID, user.get());
+                ProgressEntity savedProgress = progressRepository.save(progress);
+
+                ProgressSummary summary = progressRepository.getProgressSummary(user.get(), savedProgress.getEventEntity());
+                logger.info("Progress Summary: score={}, eventName={}, count={}", summary.getScore(), summary.getEventName(), summary.getCount());
+
+                return summary;
+
+            } else {
+                logger.info("Anonymous user processing on event = {}", eventID);
+                return progressSummaryBuilderForAnonymousUser(eventID);
+
+            }
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Unexpected error while saving progress for event = {} and location = {}", eventID, locationID, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to save progress");
         }
+    }
 
-        ProgressSummary summary = null;
+    @Override
+    public Boolean scanLocation(Long userId, Long locationId) {
+        try {
+            if (userId == null || locationId == null) {
+                logger.warn("Attempted to scan with null userId = {} or location = {}", userId, locationId);
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID and Location ID must not be null");
+            }
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        OidcUser oidcUser = null;
+            if (scanRepository.existsByUserIdAndLocationId(userId, locationId)) {
+                return false;
+            }
 
-        if (authentication != null && authentication.getPrincipal() instanceof OidcUser){
-            oidcUser = (OidcUser) authentication.getPrincipal();
+            ScanEntity scan = ScanEntity.builder()
+                    .userId(userId)
+                    .locationId(locationId)
+                    .scannedAt(Instant.now())
+                    .build();
+
+            scanRepository.save(scan);
+
+            return true;
+
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Unexpected error while checking whether location = {} is already scanned by user = {}", locationId, userId);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed checking whether location has already been scanned");
         }
-
-        Optional<UserEntity> user = oidcUser != null
-                ? userRepository.findByEmail(oidcUser.getEmail())
-                : Optional.empty();
-
-       if(user.isPresent()){
-            ProgressEntity progress = progressEntityBuilder(eventID, locationID, user.get());
-            ProgressEntity savedProgress = progressRepository.save(progress);
-            summary = progressRepository.getProgressSummary(user.get(), savedProgress.getEventEntity());
-            logger.info("Progress Summary: score={}, eventName={}, count={}", summary.getScore(), summary.getEventName(), summary.getCount());
-
-        } else {
-            summary = progressSummaryBuilderForAnonymousUser(eventID);
-
-        }
-
-       return summary;
     }
 
     @Override
@@ -89,12 +143,27 @@ public class ProgressServiceImpl implements ProgressService {
 
     @Override
     public Integer getNumberOfScannedQRCodes(UserEntity user, EventEntity event) {
-        List<ProgressEntity> scannedLocations = progressRepository.findByUserEntityAndEventEntity(user, event);
-        int noOfLocationsScanned = 0;
-        if(!scannedLocations.isEmpty()){
-            noOfLocationsScanned = scannedLocations.size();
+        try {
+            if (user == null || event == null) {
+                logger.warn("Invalid request to count scanned QR codes: user = {} event = {}", user, event);
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User and Event must not be null");
+            }
+
+            List<ProgressEntity> scannedLocations = progressRepository.findByUserEntityAndEventEntity(user, event);
+
+            int count = (scannedLocations != null) ? scannedLocations.size() : 0;
+
+            logger.info("User {} has scanned {} QR codes for event {}", user.getId(), count, event.getId());
+            return count;
+
+        } catch (ResponseStatusException e){
+            throw e;
+        } catch (Exception e) {
+            logger.error("Unexpected error while counting scanned QR codes for user = {} event = {}",
+                    (user != null ? user.getId() : null),
+                    (event != null ? event.getId() : null), e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to count scanned QR codes");
         }
-        return noOfLocationsScanned;
     }
 
     @Override
@@ -105,75 +174,168 @@ public class ProgressServiceImpl implements ProgressService {
     @Cacheable(value = "leaderboard", key = "#eventId")
     @Override
     public List<LeaderboardEntryDto> getLeaderboardForEventsTop10(Long eventId) {
-        Optional<EventEntity> event = eventRepository.findById(eventId);
-        if (event.isEmpty()){
-            return List.of();
+        try {
+            if (eventId == null) {
+                logger.warn("Leaderboard requested with null eventId");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Event ID must not be null");
+            }
+
+            Optional<EventEntity> event = eventRepository.findById(eventId);
+            if (event.isEmpty()){
+                logger.info("No event found for leaderboard request, eventId = {}", eventId);
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Event " + eventId + " was not found");
+            }
+
+            List<LeaderboardDataDto> internalData = progressRepository.findTop10LeaderboardDataByEvent(event.get())
+                    .stream()
+                    .map(projection -> {
+                        if (projection == null) {
+                            logger.warn("Null leaderboard projection found for eventId = {}", eventId);
+                            return null;
+                        }
+                        return LeaderboardDataDto.builder()
+                                .fullname(projection.getFullname())
+                                .email(projection.getEmail())
+                                .score(projection.getTotalScore())
+                                .scannedLocations(projection.getLocationsScanned())
+                                .build();
+                    })
+                    .filter(Objects::nonNull)
+                    .toList();
+
+            List<LeaderboardEntryDto> result = disambiguateNames(internalData);
+            logger.info("Returning leaderboard for eventId = {}, entries = {}", eventId, result.size());
+
+            return result;
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Unexpected error while retrieving leaderboard for eventId={}", eventId, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve leaderboard");
         }
 
-        List<LeaderboardDataDto> internalData = progressRepository.findTop10LeaderboardDataByEvent(event.get())
-                .stream()
-                .map(projection -> LeaderboardDataDto.builder()
-                        .fullname(projection.getFullname())
-                        .email(projection.getEmail())
-                        .score(projection.getTotalScore())
-                        .scannedLocations(projection.getLocationsScanned())
-                        .build())
-                .toList();
 
-        return disambiguateNames(internalData);
     }
 
     @Override
     public List<LeaderboardDataDto> getFullLeaderboardData(Long eventId) {
-        Optional<EventEntity> event = eventRepository.findById(eventId);
-        if (event.isEmpty()){
-            return List.of();
-        }
+        try {
+            if (eventId == null) {
+                logger.warn("Leader (full) requested with null eventId");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Event ID must not be null");
+            }
 
-        return progressRepository.findAllLeaderboardDataByEvent(event.get())
-                .stream()
-                .map(projection -> LeaderboardDataDto.builder()
-                        .fullname(projection.getFullname())
-                        .email(projection.getEmail())
-                        .score(projection.getTotalScore())
-                        .scannedLocations(projection.getLocationsScanned())
-                        .build())
-                .toList();
+            Optional<EventEntity> event = eventRepository.findById(eventId);
+            if (event.isEmpty()){
+                logger.info("No event found for full leaderboard request, eventId={}", eventId);
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Event " + eventId + " was not found");
+            }
+
+            List<LeaderboardDataDto> data = progressRepository.findAllLeaderboardDataByEvent(event.get())
+                    .stream()
+                    .map(projection -> LeaderboardDataDto.builder()
+                            .fullname(projection.getFullname())
+                            .email(projection.getEmail())
+                            .score(projection.getTotalScore())
+                            .scannedLocations(projection.getLocationsScanned())
+                            .build())
+                    .toList();
+
+            logger.info("Returning full leaderboard for eventId = {}, entries = {}", eventId, data.size());
+            return data;
+
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Unexpected error while retrieving full leaderboard for eventId={}", eventId, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve full leaderboard");
+        }
     }
 
     @Override
     public LeaderboardEntryDto getUserLeaderboardPosition(UserEntity user, Long eventId) {
-        LeaderboardDataDto userData = getIndividualUserStats(user, eventId);
+        try {
+            if (user == null || eventId == null) {
+                logger.warn("Leaderboard position requested with null user or eventId (user={}, eventId={})",
+                        user, eventId);
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User and Event ID must not be null");
+            }
 
-        if (userData.getScore() == 0L && userData.getScannedLocations() == 0L){
-            return LeaderboardEntryDto.builder()
-                    .fullname(user.getFullname())
-                    .score(0L)
-                    .scannedLocations(0L)
-                    .build();
+            LeaderboardDataDto userData = getIndividualUserStats(user, eventId);
+
+            if (userData.getScore() == 0L && userData.getScannedLocations() == 0L){
+                return LeaderboardEntryDto.builder()
+                        .fullname(user.getFullname())
+                        .score(0L)
+                        .scannedLocations(0L)
+                        .build();
+            }
+
+            List<LeaderboardDataDto> leaderboardData = getFullLeaderboardData(eventId);
+
+            if (leaderboardData.isEmpty()) {
+                logger.info("Leaderboard for event {} is empty, returning user {} with zeroed stats",
+                        eventId, user.getEmail());
+                return LeaderboardEntryDto.builder()
+                        .fullname(user.getFullname())
+                        .score(userData.getScore())
+                        .scannedLocations(userData.getScannedLocations())
+                        .build();
+            }
+
+            return convertToEntry(userData, leaderboardData);
+
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Unexpected error while getting leaderboard position for user {} in event {}",
+                    user != null ? user.getEmail() : "null", eventId, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve leaderboard position");
         }
-
-        List<LeaderboardDataDto> leaderboardData = getFullLeaderboardData(eventId);
-
-        return convertToEntry(userData, leaderboardData);
     }
 
     @Override
     public LeaderboardDataDto getIndividualUserStats(UserEntity user, Long eventId) {
+        try {
+            if (user == null || eventId == null) {
+                logger.warn("Attempted to retrieve individual stats with null user or eventId (user={}, eventId={})",
+                        user, eventId);
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User and Event ID must not be null");
+            }
 
-        return progressRepository.findUserLeaderboardData(user.getEmail(), eventId)
-                .map(projection -> LeaderboardDataDto.builder()
-                        .fullname(projection.getFullname())
-                        .email(projection.getEmail())
-                        .score(projection.getTotalScore())
-                        .scannedLocations(projection.getLocationsScanned())
-                        .build())
-                .orElseGet(() -> LeaderboardDataDto.builder()
-                        .fullname(user.getFullname())
-                        .email(user.getEmail())
-                        .score(0L)
-                        .scannedLocations(0L)
-                        .build());
+            return progressRepository.findUserLeaderboardData(user.getEmail(), eventId)
+                    .map(projection -> {
+                        if (projection == null) {
+                            logger.warn("Null leaderboard projection for user = {} in event = {}", user.getEmail(), eventId);
+                            return LeaderboardDataDto.builder()
+                                    .fullname(user.getFullname())
+                                    .email(user.getEmail())
+                                    .score(0L)
+                                    .scannedLocations(0L)
+                                    .build();
+                        }
+                        return LeaderboardDataDto.builder()
+                                .fullname(Optional.ofNullable(projection.getFullname()).orElse(user.getFullname()))
+                                .email(Optional.ofNullable(projection.getEmail()).orElse(user.getEmail()))
+                                .score(Optional.ofNullable(projection.getTotalScore()).orElse(0L))
+                                .scannedLocations(Optional.ofNullable(projection.getLocationsScanned()).orElse(0L))
+                                .build();
+                    })
+                    .orElseGet(() -> LeaderboardDataDto.builder()
+                            .fullname(user.getFullname())
+                            .email(user.getEmail())
+                            .score(0L)
+                            .scannedLocations(0L)
+                            .build());
+
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Unexpected error retrieving stats for user={} in event={}",
+                    user != null ? user.getEmail() : "null", eventId, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve user stats");
+        }
+
     }
 
     private LeaderboardEntryDto convertToEntry(LeaderboardDataDto data, List<LeaderboardDataDto> fullList) {
@@ -229,47 +391,97 @@ public class ProgressServiceImpl implements ProgressService {
 
 
     public ProgressEntity progressEntityBuilder(Long eventID, Long locationID, UserEntity user) {
-        EventEntity event = eventRepository.findById(eventID).orElse(null);
-        logger.info("Authenticated User: Event = " + event);
-        LocationEntity location = locationRepository.findById(locationID).orElse(null);
-        logger.info("Authenticated User: Location = " + location);
+        try {
+            if (eventID == null || locationID == null || user == null) {
+                logger.warn("ProgressEntity build failed due to null input (eventID = {}, user = {})",
+                        eventID, locationID, user != null ? user.getEmail() : "null");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Event ID, Location ID, and User must not be null");
+            }
 
-        event = entityManager.merge(event);
-        location = entityManager.merge(location);
+            EventEntity event = eventRepository.findById(eventID).orElse(null);
+            if (event == null) {
+                logger.warn("No event found for ID = {}", eventID);
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Event " + eventID + " not found");
+            }
 
-        location.setEventEntity(null);
-        int score = calculateScoreForScan(user, event);
-        event.setUserEntity(null);
-        String scanDate = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE);
+            LocationEntity location = locationRepository.findById(locationID).orElse(null);
+            if (location == null) {
+                logger.warn("No location found for ID={}", locationID);
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Location " + locationID + " not found");
+            }
 
-        return ProgressEntity.builder()
-                .userEntity(user)
-                .eventEntity(event)
-                .locationEntity(location)
-                .scanTime(scanDate)
-                .score(score)
-                .build();
+            try {
+                event = entityManager.merge(event);
+                location = entityManager.merge(location);
+            } catch (IllegalArgumentException e) {
+                logger.error("Entity merge failed for eventID={} or locationID={}", eventID, locationID, e);
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Entity merge failed");
+            }
+
+            location.setEventEntity(null);
+            event.setUserEntity(null);
+
+            int score;
+            try {
+                score = calculateScoreForScan(user, event);
+            } catch (Exception e) {
+                logger.error("Score calculation failed for user={} eventID={}", user.getEmail(), eventID, e);
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Score calculation failed");
+            }
+
+            String scanDate = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE);
+
+            return ProgressEntity.builder()
+                    .userEntity(user)
+                    .eventEntity(event)
+                    .locationEntity(location)
+                    .scanTime(scanDate)
+                    .score(score)
+                    .build();
+
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Unexpected error while building ProgressEntity (eventID={}, locationID={}, user={})",
+                    eventID, locationID, user != null ? user.getEmail() : "null", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to build progress entity");
+        }
     }
 
     public ProgressSummary progressSummaryBuilderForAnonymousUser(Long eventID){
-        EventEntity event = eventRepository.findById(eventID).orElse(null);
-        logger.info("Anonymous User: Event = " + event);
-        event = entityManager.merge(event);
+        try {
+            if (eventID == null) {
+                logger.warn("Anonymous progress summary requested with null eventID");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Event ID must not be null");
+            }
 
-        long numberOfLocations = 0L;
-        if(event != null){
+            EventEntity event = eventRepository.findById(eventID).orElse(null);
+            if (event == null) {
+                logger.warn("No event found for anonymous progress summary, eventID={}", eventID);
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Event " + eventID + " not found");
+            }
+
+            try {
+                event = entityManager.merge(event);
+            } catch (IllegalArgumentException e) {
+                logger.error("Entity merge failed for anonymous user eventID={}", eventID, e);
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to prepare event entity");
+            }
+
             List<LocationEntity> locations = locationRepository.findByEventEntity(event);
-            numberOfLocations = locations.size();
+            long numberOfLocations = (locations != null) ? locations.size() : 0L;
 
             return ProgressSummary.builder()
                     .eventName(event.getEventName())
                     .count(numberOfLocations)
                     .score(null)
                     .build();
-        }else {
-            return null;
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Unexpected error building anonymous progress summary for eventID={}", eventID, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to build anonymous progress summary");
         }
-
 
     }
 }

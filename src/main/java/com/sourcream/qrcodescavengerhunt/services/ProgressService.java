@@ -12,6 +12,8 @@ public interface ProgressService {
 
     ProgressSummary saveProgress(Long eventID, Long locationID);
 
+    Boolean scanLocation(Long userId, Long locationId);
+
     ProgressSummary getProgressSummary(UserEntity user, EventEntity event);
 
     Integer getNumberOfScannedQRCodes(UserEntity user, EventEntity event);
