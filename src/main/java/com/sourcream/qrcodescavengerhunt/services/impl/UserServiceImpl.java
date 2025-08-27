@@ -36,6 +36,11 @@ public class UserServiceImpl implements UserService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email is required");
             }
 
+            if (userRepository.findByEmail(userEntity.getEmail()).isPresent()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "User with email " + userEntity.getEmail() + " already exists");
+            }
+
             logger.info("Saving user with email: {}", userEntity.getEmail());
             return userRepository.save(userEntity);
 
@@ -51,24 +56,97 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Optional<UserEntity> getUserByEmail(String email) {
-        return userRepository.findByEmail(email);
+        try {
+            if (email == null || email.isBlank()) {
+                logger.warn("Attempted to fetch user with null or blank email");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email must not be empty");
+            }
+
+            logger.info("Fetching user by email: {}", email);
+            return userRepository.findByEmail(email);
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Unexpected error while fetching user by email: {}", email, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to fetch user");
+        }
+
     }
 
     @Override
     public UserEntity updateUserRole(Long id, Role role) {
-        UserEntity userEntity = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        userEntity.setRole(role);
-        return userRepository.save(userEntity);
+        try {
+            if (id == null || id <= 0){
+                logger.warn("Attempted to update role with null user ID or user ID is less than 1");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID must not be null or less than 1");
+            }
+
+            if (role == null) {
+                logger.warn("Attempted to update roll with null role for userId = {}", id);
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Role must not be null");
+            }
+
+            UserEntity userEntity = userRepository.findById(id)
+                    .orElseThrow(() -> {
+                        logger.warn("User with id = {} not found for role update", id);
+                        return new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+                    });
+
+            userEntity.setRole(role);
+            UserEntity updatedUser = userRepository.save(userEntity);
+            logger.info("Updated role for user id = {} to {}", id, role);
+
+            return updatedUser;
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Unexpected error while updating role for user id={}", id, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update user role");
+        }
     }
 
     @Override
     public boolean isExists(Long id) {
-        return userRepository.existsById(id);
+        try {
+            if (id == null || id <= 0) {
+                logger.warn("Attempted to check existence with null user ID");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User Id must not be null");
+            }
+
+            boolean exists = userRepository.existsById(id);
+            logger.info("Checked existence for user id = {}, exists = {}", id, exists);
+
+            return exists;
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Unexpected error while checking existence for user id={}", id, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to check user existence");
+        }
     }
 
     @Override
     public void deleteUser(Long id) {
-        userRepository.deleteById(id);
+        try {
+            if (id == null || id <= 0) {
+                logger.warn("Attempted to delete user with null ID");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID must not be null");
+            }
+
+            if (!userRepository.existsById(id)){
+                logger.warn("Attempted to delete non-existing user with id={}", id);
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+            }
+
+            userRepository.deleteById(id);
+            logger.info("Successfully deleted user with id = {}", id);
+
+        } catch (ResponseStatusException e) {
+            throw e; // pass along friendly errors
+        } catch (Exception e) {
+            logger.error("Unexpected error while deleting user with id={}", id, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete user");
+        }
+
     }
 }

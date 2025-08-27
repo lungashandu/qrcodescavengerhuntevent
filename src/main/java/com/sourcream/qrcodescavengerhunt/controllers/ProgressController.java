@@ -35,7 +35,7 @@ public class ProgressController {
     private ProgressService progressService;
     private UserService userService;
     private UserContext userContext;
-    private static final Logger logger = LoggerFactory.getLogger(ProgressServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(ProgressController.class);
 
     public ProgressController(Mapper<ProgressSummary, ProgressSummaryDto> progressMapper, ProgressService progressService, UserService userService, UserContext userContext) {
         this.progressMapper = progressMapper;
