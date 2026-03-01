@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -25,11 +27,9 @@ public class EventDto {
     private String description;
 
     @NotNull(message = "Start time is required")
-    @FutureOrPresent(message = "Start time must be in the present or future")
     private String startTime;
 
     @NotNull(message = "End time is required")
-    @Future(message = "End time must be in the future")
     private String endTime;
 
     private UserEntity userEntity;

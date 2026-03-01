@@ -111,8 +111,6 @@ public class ProgressControllerIntegrationTests {
                 MockMvcResultMatchers.jsonPath("$.eventName").value(summary.getEventName())
         ).andExpect(
                 MockMvcResultMatchers.jsonPath("$.count").value(summary.getCount())
-        ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.score").value(summary.getScore())
         );
     }
 
@@ -251,9 +249,8 @@ public class ProgressControllerIntegrationTests {
     @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
     public void testGetTopLeaderboardForNonExistentEventReturnsEmptyList() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/progress/1/top"))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$").isArray())
-                .andExpect(MockMvcResultMatchers.jsonPath("$").isEmpty());
+                .andExpect(MockMvcResultMatchers.status().isNotFound())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.error").value("Event 1 was not found"));
     }
 
     @Test

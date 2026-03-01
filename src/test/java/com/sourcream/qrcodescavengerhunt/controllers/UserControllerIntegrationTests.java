@@ -2,6 +2,7 @@ package com.sourcream.qrcodescavengerhunt.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sourcream.qrcodescavengerhunt.TestDataUtil;
+import com.sourcream.qrcodescavengerhunt.security.WithMockOidcUser;
 import com.sourcream.qrcodescavengerhunt.security.config.TestSecurityConfig;
 import com.sourcream.qrcodescavengerhunt.domain.entities.Role;
 import com.sourcream.qrcodescavengerhunt.domain.entities.UserEntity;
@@ -14,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -21,6 +23,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
+@ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
@@ -37,6 +40,7 @@ public class UserControllerIntegrationTests {
     }
 
     @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
     public void testThatCreateUserSuccessfullyReturnsHttp201Created() throws Exception {
         UserEntity user = TestDataUtil.createTestUserA();
         user.setId(null);
@@ -52,6 +56,7 @@ public class UserControllerIntegrationTests {
     }
 
     @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
     public void testThatCreateUserSuccefullyReturnsSavedUser() throws Exception {
         UserEntity user = TestDataUtil.createTestUserA();
         user.setId(null);
@@ -77,6 +82,7 @@ public class UserControllerIntegrationTests {
     }
 
     @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
     public void testThatGetUserReturnsHttpCode200WhenUserExists() throws Exception {
         UserEntity userEntity = TestDataUtil.createTestUserA();
         userService.saveUser(userEntity);
@@ -90,6 +96,7 @@ public class UserControllerIntegrationTests {
     }
 
     @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
     public void testThatGetUserReturnsUserWhenUserExists() throws Exception {
         UserEntity userEntity = TestDataUtil.createTestUserA();
         userService.saveUser(userEntity);
@@ -113,6 +120,7 @@ public class UserControllerIntegrationTests {
     }
 
     @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
     public void testThatGetUserReturnsHttpCode404WhenNoUserExists() throws Exception {
         mockMvc.perform(
                 MockMvcRequestBuilders.get("/users/john.doe@example.com")
@@ -123,6 +131,7 @@ public class UserControllerIntegrationTests {
     }
 
     @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
     public void testThatRoleUpdateReturnsHttpStatus200() throws Exception {
         UserEntity userEntity = TestDataUtil.createTestUserA();
         UserEntity savedUserEntity = userService.saveUser(userEntity);
@@ -139,6 +148,7 @@ public class UserControllerIntegrationTests {
     }
 
     @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
     public void testThatRoleUpdateReturnsUpdatedUser() throws Exception {
         UserEntity userEntity = TestDataUtil.createTestUserA();
         UserEntity savedUserEntity = userService.saveUser(userEntity);
@@ -165,16 +175,18 @@ public class UserControllerIntegrationTests {
     }
 
     @Test
-    public void testThatDeleteUserReturnsHttpStatus204ForNonExistingUser() throws Exception {
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
+    public void testThatDeleteUserReturnsHttpStatus404ForNonExistingUser() throws Exception {
         mockMvc.perform(
                 MockMvcRequestBuilders.delete("/users/999")
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(
-                MockMvcResultMatchers.status().isNoContent()
+                MockMvcResultMatchers.status().isNotFound()
         );
     }
 
     @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
     public void testThatDeleteUserReturnsHttpStatus204ForExistingUser() throws Exception {
         UserEntity userEntity = TestDataUtil.createTestUserA();
         UserEntity savedUserEntity = userService.saveUser(userEntity);

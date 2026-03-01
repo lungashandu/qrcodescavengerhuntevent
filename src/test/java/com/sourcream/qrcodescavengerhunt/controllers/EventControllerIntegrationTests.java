@@ -110,6 +110,7 @@ public class EventControllerIntegrationTests {
     }
 
     @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
     public void testThatGetEventsByIdReturnsHttpStatus404WhenEventNotFound() throws Exception {
         mockMvc.perform(
                 MockMvcRequestBuilders.get("/events/1")
@@ -296,12 +297,13 @@ public class EventControllerIntegrationTests {
     }
 
     @Test
-    public void testThatDeleteReturnsHttpStatus204ForNonExistingEvent() throws Exception{
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
+    public void testThatDeleteReturnsHttpStatus404ForNonExistingEvent() throws Exception{
         mockMvc.perform(
                 MockMvcRequestBuilders.delete("/events/1")
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(
-                MockMvcResultMatchers.status().isNoContent()
+                MockMvcResultMatchers.status().isNotFound()
         );
     }
 

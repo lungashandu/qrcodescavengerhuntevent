@@ -142,6 +142,26 @@ public class ProgressServiceImpl implements ProgressService {
     }
 
     @Override
+    public List<ProgressEntity> getUserProgressForEvent(UserEntity user, EventEntity event) {
+        try {
+            if (user == null || event == null) {
+                logger.warn("Attempted to get user progress with null event or user");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "event and user cannot be null if looking for user progress");
+            }
+
+            return progressRepository.findByUserEntityAndEventEntity(user, event);
+
+        }catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            assert user != null;
+            assert false;
+            logger.error("Unexpected error while retrieving user progress for user = {}, in event = {}", user.getEmail(), event.getId());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed checking whether location has already been scanned");
+        }
+    }
+
+    @Override
     public Integer getNumberOfScannedQRCodes(UserEntity user, EventEntity event) {
         try {
             if (user == null || event == null) {
@@ -409,17 +429,6 @@ public class ProgressServiceImpl implements ProgressService {
                 logger.warn("No location found for ID={}", locationID);
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Location " + locationID + " not found");
             }
-
-            try {
-                event = entityManager.merge(event);
-                location = entityManager.merge(location);
-            } catch (IllegalArgumentException e) {
-                logger.error("Entity merge failed for eventID={} or locationID={}", eventID, locationID, e);
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Entity merge failed");
-            }
-
-            location.setEventEntity(null);
-            event.setUserEntity(null);
 
             int score;
             try {

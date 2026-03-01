@@ -10,7 +10,7 @@ public interface LocationService {
 
     LocationEntity saveLocation(LocationEntity locationEntity) throws Exception;
 
-    Optional<List<LocationEntity>> getLocationByEvent(EventEntity event);
+    List<LocationEntity> getLocationByEvent(EventEntity event);
 
     Optional<LocationEntity> getLocationById(Long id);
 

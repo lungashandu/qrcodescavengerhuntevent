@@ -1,8 +1,11 @@
 package com.sourcream.qrcodescavengerhunt.config;
 
 import com.sourcream.qrcodescavengerhunt.services.impl.CustomOidcUserService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -24,10 +27,28 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    @Order(1)
+    public SecurityFilterChain progressApiSecurity(HttpSecurity http) throws Exception {
         http
+                .securityMatcher("/progress/**")
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests( auth -> auth
+                        .anyRequest().permitAll()
+                )
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) ->
+                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED)
+                        )
+                );
+        return http.build();
+    }
+
+    @Bean
+    @Order(2)
+    public SecurityFilterChain appSecurity(HttpSecurity http) throws Exception {
+        http
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/locations/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
@@ -40,7 +61,6 @@ public class SecurityConfig {
                         .jwt(jwt -> jwt
                                 .jwtAuthenticationConverter(customJwtAuthenticationConverter)
                                 .decoder(oidcIdTokenDecoder())))
-                .csrf(AbstractHttpConfigurer::disable)
                 .logout(logout -> logout.logoutSuccessUrl("/").permitAll());
 
         return http.build();

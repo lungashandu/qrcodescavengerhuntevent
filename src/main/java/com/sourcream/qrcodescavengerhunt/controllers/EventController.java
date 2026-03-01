@@ -16,6 +16,7 @@ import shaded_package.javax.validation.Valid;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -24,7 +25,7 @@ public class EventController {
 
     private Mapper<EventEntity, EventDto> eventMapper;
     private EventService eventService;
-    private static final Logger logger = LoggerFactory.getLogger(EventServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(EventController.class);
 
 
     public EventController(Mapper<EventEntity, EventDto> eventMapper, EventService eventService) {
@@ -147,7 +148,7 @@ public class EventController {
 
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode()).body(Map.of(
-                    "error", e.getReason(),
+                    "error", Objects.requireNonNull(e.getReason()),
                     "timestamp", Instant.now()
             ));
         } catch (Exception e) {

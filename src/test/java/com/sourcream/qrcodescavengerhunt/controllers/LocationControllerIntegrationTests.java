@@ -107,6 +107,7 @@ public class LocationControllerIntegrationTests {
     }
 
     @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
     public void testThatGetLocationByIdReturnsHttpStatus404WhenLocationNotFound() throws Exception {
         mockMvc.perform(
                 MockMvcRequestBuilders.get("/locations/1")
@@ -171,6 +172,7 @@ public class LocationControllerIntegrationTests {
     }
 
     @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
     public void testThatGetLocationByEventReturnsEmptyListWhenNoLocationsAreAvailable() throws Exception {
         UserEntity user = TestDataUtil.createTestUserA();
         user = userService.saveUser(user);
@@ -179,7 +181,7 @@ public class LocationControllerIntegrationTests {
         String eventJson = objectMapper.writeValueAsString(event);
 
         mockMvc.perform(
-                MockMvcRequestBuilders.get("/locations/by-event/")
+                MockMvcRequestBuilders.get("/locations/by-event")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(eventJson)
         ).andExpect(
@@ -203,7 +205,7 @@ public class LocationControllerIntegrationTests {
         String eventJson = objectMapper.writeValueAsString(event);
 
         mockMvc.perform(
-                MockMvcRequestBuilders.get("/locations/by-event/")
+                MockMvcRequestBuilders.get("/locations/by-event")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(eventJson)
         ).andExpect(
@@ -270,16 +272,18 @@ public class LocationControllerIntegrationTests {
     }
 
     @Test
-    public void testThatDeleteReturnHttpsStatus204ForNonExistingLocation() throws Exception {
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
+    public void testThatDeleteReturnHttpsStatus404ForNonExistingLocation() throws Exception {
         mockMvc.perform(
                 MockMvcRequestBuilders.delete("/locations/1")
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(
-                MockMvcResultMatchers.status().isNoContent()
+                MockMvcResultMatchers.status().isNotFound()
         );
     }
 
     @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
     public void testThatDeleteReturnHttpsStatus204ForExistingLocation() throws Exception {
         UserEntity user = TestDataUtil.createTestUserA();
         user = userService.saveUser(user);
