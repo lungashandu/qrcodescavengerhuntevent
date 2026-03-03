@@ -2,6 +2,7 @@ package com.sourcream.qrcodescavengerhunt.repositories;
 
 import com.sourcream.qrcodescavengerhunt.TestDataUtil;
 import com.sourcream.qrcodescavengerhunt.domain.entities.*;
+import com.sourcream.qrcodescavengerhunt.domain.projection.ScannedLocationCard;
 import com.sourcream.qrcodescavengerhunt.domain.projection.UserLeaderboardProjection;
 import com.sourcream.qrcodescavengerhunt.security.config.TestSecurityConfig;
 import org.junit.jupiter.api.Test;
@@ -287,5 +288,61 @@ public class ProgressRepositoryIntegrationTests {
         Optional<UserLeaderboardProjection> result = underTest.findUserLeaderboardData(user.getEmail(), event.getId());
 
         assertThat(result).isEmpty();
+    }
+
+    @Test
+    public void findScanCardsByUserAndEvents_shhouldReturnCardsOrderedByScanTimeDesc() {
+        UserEntity user = TestDataUtil.createTestUserA();
+        userRepository.save(user);
+
+        EventEntity event = TestDataUtil.createTestEventA(user);
+        eventRepository.save(event);
+
+        LocationEntity locationA = TestDataUtil.createTestLocationA(event);
+        locationRepository.save(locationA);
+
+        LocationEntity locationB = TestDataUtil.createTestLocationB(event);
+        locationRepository.save(locationB);
+
+        ProgressEntity progressA = TestDataUtil.createTestProgressA(user, event, locationA);
+        underTest.save(progressA);
+
+        ProgressEntity progressB = TestDataUtil.createTestProgressB(user, event, locationB);
+        underTest.save(progressB);
+
+        List<ScannedLocationCard> results = underTest.findScanCardsByUserAndEvent(user, event);
+
+        assertThat(results).hasSize(2);
+
+        assertThat(results.get(0).getName()).isEqualTo(locationB.getName());
+
+        assertThat(results.get(0).getScore()).isEqualTo(progressB.getScore());
+
+        assertThat(results.get(1).getName()).isEqualTo(locationA.getName());
+    }
+
+    @Test
+    public void countByUserEntityAndEventEntity_shouldReturnCorrectCount() {
+        UserEntity user = TestDataUtil.createTestUserA();
+        userRepository.save(user);
+
+        EventEntity event = TestDataUtil.createTestEventA(user);
+        eventRepository.save(event);
+
+        LocationEntity locationA = TestDataUtil.createTestLocationA(event);
+        locationRepository.save(locationA);
+
+        LocationEntity locationB = TestDataUtil.createTestLocationB(event);
+        locationRepository.save(locationB);
+
+        ProgressEntity progressA = TestDataUtil.createTestProgressA(user, event, locationA);
+        underTest.save(progressA);
+
+        ProgressEntity progressB = TestDataUtil.createTestProgressB(user, event, locationB);
+        underTest.save(progressB);
+
+        long count = underTest.countByUserEntityAndEventEntity(user, event);
+
+        assertThat(count).isEqualTo(2);
     }
 }

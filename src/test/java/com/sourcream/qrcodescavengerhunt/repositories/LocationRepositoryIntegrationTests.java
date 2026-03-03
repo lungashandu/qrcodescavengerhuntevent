@@ -3,6 +3,7 @@ package com.sourcream.qrcodescavengerhunt.repositories;
 import com.sourcream.qrcodescavengerhunt.TestDataUtil;
 import com.sourcream.qrcodescavengerhunt.domain.entities.EventEntity;
 import com.sourcream.qrcodescavengerhunt.domain.entities.LocationEntity;
+import com.sourcream.qrcodescavengerhunt.domain.entities.UserEntity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +20,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class LocationRepositoryIntegrationTests {
     private LocationRepository underTest;
+    private final UserRepository userRepository;
+    private final EventRepository eventRepository;
 
     @Autowired
-    public LocationRepositoryIntegrationTests(LocationRepository underTest) {
+    public LocationRepositoryIntegrationTests(LocationRepository underTest, UserRepository userRepository, EventRepository eventRepository) {
         this.underTest = underTest;
+        this.userRepository = userRepository;
+        this.eventRepository = eventRepository;
     }
 
     @Test
@@ -79,5 +84,27 @@ public class LocationRepositoryIntegrationTests {
 
         Optional<LocationEntity> result = underTest.findById(locationA.getId());
         assertThat(result).isEmpty();
+    }
+
+    @Test
+    public void countByEventEntity_shouldReturnCorrectCount() {
+        UserEntity user = TestDataUtil.createTestUserA();
+        userRepository.save(user);
+
+        EventEntity event = TestDataUtil.createTestEventA(user);
+        eventRepository.save(event);
+
+        LocationEntity locationA = TestDataUtil.createTestLocationA(event);
+        underTest.save(locationA);
+
+        LocationEntity locationB = TestDataUtil.createTestLocationB(event);
+        underTest.save(locationB);
+
+        LocationEntity locationC = TestDataUtil.createTestLocationC(event);
+        underTest.save(locationC);
+
+        long count = underTest.countByEventEntity(event);
+
+        assertThat(count).isEqualTo(3);
     }
 }

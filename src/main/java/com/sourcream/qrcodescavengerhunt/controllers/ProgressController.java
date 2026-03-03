@@ -1,10 +1,13 @@
 package com.sourcream.qrcodescavengerhunt.controllers;
 
+import com.sourcream.qrcodescavengerhunt.domain.dto.EventProgressOverview;
 import com.sourcream.qrcodescavengerhunt.domain.dto.LeaderboardEntryDto;
 import com.sourcream.qrcodescavengerhunt.domain.dto.ProgressSummaryDto;
+import com.sourcream.qrcodescavengerhunt.domain.entities.EventEntity;
 import com.sourcream.qrcodescavengerhunt.domain.entities.ProgressSummary;
 import com.sourcream.qrcodescavengerhunt.domain.entities.UserEntity;
 import com.sourcream.qrcodescavengerhunt.mappers.Mapper;
+import com.sourcream.qrcodescavengerhunt.services.EventService;
 import com.sourcream.qrcodescavengerhunt.services.ProgressService;
 import com.sourcream.qrcodescavengerhunt.services.UserService;
 import com.sourcream.qrcodescavengerhunt.services.impl.ProgressServiceImpl;
@@ -34,13 +37,16 @@ public class ProgressController {
     private Mapper<ProgressSummary, ProgressSummaryDto> progressMapper;
     private ProgressService progressService;
     private UserService userService;
+
+    private EventService eventService;
     private UserContext userContext;
     private static final Logger logger = LoggerFactory.getLogger(ProgressController.class);
 
-    public ProgressController(Mapper<ProgressSummary, ProgressSummaryDto> progressMapper, ProgressService progressService, UserService userService, UserContext userContext) {
+    public ProgressController(Mapper<ProgressSummary, ProgressSummaryDto> progressMapper, ProgressService progressService, UserService userService, EventService eventService, UserContext userContext) {
         this.progressMapper = progressMapper;
         this.progressService = progressService;
         this.userService = userService;
+        this.eventService = eventService;
         this.userContext = userContext;
     }
 
@@ -74,6 +80,24 @@ public class ProgressController {
         } else {
             return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
         }
+    }
+
+    @GetMapping("/progress/events/{id}")
+    public ResponseEntity<?> getEventProgress(@PathVariable Long id) {
+        String email = userContext.getCurrentUserEmail();
+        UserEntity user = userService.getUserByEmail(email).orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "User not found"
+        ));
+
+        EventEntity event = eventService.getEventById(id).orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Event not found"
+        ));
+
+        EventProgressOverview overview = progressService.getEventProgressOverview(user, event);
+
+        return ResponseEntity.ok(overview);
     }
 
     @GetMapping("/progress/{eventId}/top")

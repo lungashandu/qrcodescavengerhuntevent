@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface LocationRepository extends JpaRepository<LocationEntity, Long> {
     List<LocationEntity> findByEventEntity(EventEntity event);
+
+    long countByEventEntity(EventEntity event);
 }

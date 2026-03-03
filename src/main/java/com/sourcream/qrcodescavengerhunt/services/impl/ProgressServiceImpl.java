@@ -1,8 +1,10 @@
 package com.sourcream.qrcodescavengerhunt.services.impl;
 
+import com.sourcream.qrcodescavengerhunt.domain.dto.EventProgressOverview;
 import com.sourcream.qrcodescavengerhunt.domain.dto.LeaderboardDataDto;
 import com.sourcream.qrcodescavengerhunt.domain.dto.LeaderboardEntryDto;
 import com.sourcream.qrcodescavengerhunt.domain.entities.*;
+import com.sourcream.qrcodescavengerhunt.domain.projection.ScannedLocationCard;
 import com.sourcream.qrcodescavengerhunt.repositories.*;
 import com.sourcream.qrcodescavengerhunt.services.ProgressService;
 import com.sourcream.qrcodescavengerhunt.util.CalculateScore;
@@ -142,14 +144,26 @@ public class ProgressServiceImpl implements ProgressService {
     }
 
     @Override
-    public List<ProgressEntity> getUserProgressForEvent(UserEntity user, EventEntity event) {
+    public EventProgressOverview getEventProgressOverview(UserEntity user, EventEntity event) {
         try {
             if (user == null || event == null) {
-                logger.warn("Attempted to get user progress with null event or user");
+                logger.warn("User or Event was null while fetching progress overview");
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "event and user cannot be null if looking for user progress");
             }
 
-            return progressRepository.findByUserEntityAndEventEntity(user, event);
+            long scannedCount = progressRepository.countByUserEntityAndEventEntity(user, event);
+            long totalLocations = locationRepository.countByEventEntity(event);
+            List<ScannedLocationCard> scannedCards = progressRepository.findScanCardsByUserAndEvent(user, event);
+            long remaining = totalLocations - scannedCount;
+
+            return new EventProgressOverview(
+                    event.getId(),
+                    event.getEventName(),
+                    scannedCount,
+                    totalLocations,
+                    remaining,
+                    scannedCards
+            );
 
         }catch (ResponseStatusException e) {
             throw e;

@@ -337,4 +337,63 @@ public class ProgressControllerIntegrationTests {
                 .andExpect(MockMvcResultMatchers.jsonPath("$[2].fullname").value("Alice Williams"));
     }
 
+    @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
+    public void testGetEventProgressOverviewReturnsCorrectData() throws Exception {
+        UserEntity user = TestDataUtil.createTestUserA();
+        userService.saveUser(user);
+
+        EventEntity event = TestDataUtil.createTestEventA(user);
+        eventService.saveEvent(event);
+
+        LocationEntity locationA = TestDataUtil.createTestLocationA(event);
+        locationService.saveLocation(locationA);
+        LocationEntity locationB = TestDataUtil.createTestLocationB(event);
+        locationService.saveLocation(locationB);
+        LocationEntity locationC = TestDataUtil.createTestLocationC(event);
+        locationService.saveLocation(locationC);
+
+        setupAuthentication(user.getEmail());
+        progressService.saveProgress(event.getId(), locationA.getId());
+        progressService.saveProgress(event.getId(), locationB.getId());
+        progressService.saveProgress(event.getId(), locationC.getId());
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.get("/progress/events/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.eventId").value(1))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.scannedCount").value(3))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.totalLocations").value(3))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.remaining").value(0))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.scannedLocations").isArray())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.scannedLocations[0].score").isNumber())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.scannedLocations[0].scanTime").exists());
+    }
+
+    @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
+    public void testGetEventProgressOverviewWhenUserHasNoScans() throws Exception {
+        UserEntity user = TestDataUtil.createTestUserA();
+        userService.saveUser(user);
+
+        EventEntity event = TestDataUtil.createTestEventA(user);
+        eventService.saveEvent(event);
+
+        LocationEntity locationA = TestDataUtil.createTestLocationA(event);
+        locationService.saveLocation(locationA);
+        LocationEntity locationB = TestDataUtil.createTestLocationB(event);
+        locationService.saveLocation(locationB);
+        LocationEntity locationC = TestDataUtil.createTestLocationC(event);
+        locationService.saveLocation(locationC);
+
+        mockMvc.perform(
+                        MockMvcRequestBuilders.get("/progress/events/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.scannedCount").value(0))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.remaining").value(3))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.scannedLocations").isEmpty());
+    }
+
 }
