@@ -16,7 +16,7 @@ public class LocationDto {
     private Long id;
 
     @NotNull(message = "Each location has to be associated with an event")
-    private EventEntity eventEntity;
+    private Long eventId;
 
     private String qrCodeUrl;
 

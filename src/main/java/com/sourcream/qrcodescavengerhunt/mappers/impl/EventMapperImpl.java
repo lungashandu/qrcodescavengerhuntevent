@@ -16,7 +16,17 @@ public class EventMapperImpl implements Mapper<EventEntity, EventDto> {
     }
     @Override
     public EventDto mapTo(EventEntity event) {
-        return modelMapper.map(event, EventDto.class);
+        EventDto dto = new EventDto();
+        dto.setId(event.getId());
+        dto.setEventName(event.getEventName());
+        dto.setDescription(event.getDescription());
+        dto.setStartTime(event.getStartTime());
+        dto.setEndTime(event.getEndTime());
+        if (event.getUserEntity() != null) {
+            dto.setUserId(event.getUserEntity().getId());
+            dto.setUserFullName(event.getUserEntity().getFullname());
+        }
+        return dto;
     }
 
     @Override

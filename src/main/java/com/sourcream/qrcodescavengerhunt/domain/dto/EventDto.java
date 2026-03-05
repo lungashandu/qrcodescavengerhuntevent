@@ -32,5 +32,6 @@ public class EventDto {
     @NotNull(message = "End time is required")
     private String endTime;
 
-    private UserEntity userEntity;
+    private Long userId;
+    private String userFullName;
 }
