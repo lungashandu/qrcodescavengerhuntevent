@@ -2,6 +2,7 @@ package com.sourcream.qrcodescavengerhunt.services.impl;
 
 import com.sourcream.qrcodescavengerhunt.domain.entities.EventEntity;
 import com.sourcream.qrcodescavengerhunt.domain.entities.LocationEntity;
+import com.sourcream.qrcodescavengerhunt.repositories.EventRepository;
 import com.sourcream.qrcodescavengerhunt.repositories.LocationRepository;
 import com.sourcream.qrcodescavengerhunt.services.LocationService;
 import com.sourcream.qrcodescavengerhunt.util.QRCodeGenerator;
@@ -14,19 +15,19 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @Service
 public class LocationServiceImpl implements LocationService {
 
     LocationRepository locationRepository;
+    private final EventRepository eventRepository;
 
     QRCodeGenerator qrCodeGenerator;
     private static final Logger logger = LoggerFactory.getLogger(LocationServiceImpl.class);
 
-    public LocationServiceImpl(LocationRepository locationRepository, QRCodeGenerator qrCodeGenerator) {
+    public LocationServiceImpl(LocationRepository locationRepository, EventRepository eventRepository, QRCodeGenerator qrCodeGenerator) {
         this.locationRepository = locationRepository;
+        this.eventRepository = eventRepository;
         this.qrCodeGenerator = qrCodeGenerator;
     }
 
@@ -36,10 +37,17 @@ public class LocationServiceImpl implements LocationService {
         QRCodeGenerator.QRCodeUploadResult uploadResult = null;
         
         try {
-            if (locationEntity == null || locationEntity.getEventEntity() == null) {
-                logger.warn("Attempted to save new location will null location entity or event entity");
-                throw new IllegalArgumentException("Location and Event must not be null");
+            if (locationEntity == null || locationEntity.getEventEntity() == null || locationEntity.getEventEntity().getId() == null) {
+                logger.warn("Attempted to save new location with missing event reference");
+                throw new IllegalArgumentException("Location and Event ID must not be null");
             }
+
+            Long eventId = locationEntity.getEventEntity().getId();
+
+            EventEntity event = eventRepository.findById(eventId)
+                    .orElseThrow(() -> new IllegalArgumentException("Event not found"));
+
+            locationEntity.setEventEntity(event);
 
             LocationEntity savedLocation = locationRepository.save(locationEntity);
 

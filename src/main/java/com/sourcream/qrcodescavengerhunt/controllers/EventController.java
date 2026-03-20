@@ -4,7 +4,6 @@ import com.sourcream.qrcodescavengerhunt.domain.dto.EventDto;
 import com.sourcream.qrcodescavengerhunt.domain.entities.EventEntity;
 import com.sourcream.qrcodescavengerhunt.mappers.Mapper;
 import com.sourcream.qrcodescavengerhunt.services.EventService;
-import com.sourcream.qrcodescavengerhunt.services.impl.EventServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;

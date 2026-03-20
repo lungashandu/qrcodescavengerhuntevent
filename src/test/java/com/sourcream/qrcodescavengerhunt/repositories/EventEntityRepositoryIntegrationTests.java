@@ -20,15 +20,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class EventEntityRepositoryIntegrationTests {
 
     private EventRepository underTest;
+    private UserRepository userRepository;
 
     @Autowired
-    public EventEntityRepositoryIntegrationTests(EventRepository underTest){
+    public EventEntityRepositoryIntegrationTests(EventRepository underTest, UserRepository userRepository){
         this.underTest = underTest;
+        this.userRepository = userRepository;
     }
 
     @Test
     public void testThatEventCanBeCreatedAndRecalled() {
         UserEntity user = TestDataUtil.createTestUserA();
+        userRepository.save(user);
         EventEntity event = TestDataUtil.createTestEventA(user);
         underTest.save(event);
 
@@ -40,6 +43,7 @@ public class EventEntityRepositoryIntegrationTests {
     @Test
     public void testThatMultipleEventsCanBeCreatedAndRecalled() {
         UserEntity user = TestDataUtil.createTestUserA();
+        userRepository.save(user);
 
         EventEntity eventA = TestDataUtil.createTestEventA(user);
         underTest.save(eventA);
@@ -59,6 +63,7 @@ public class EventEntityRepositoryIntegrationTests {
     @Test
     public void testThatEventCanBeUpdated() {
         UserEntity user = TestDataUtil.createTestUserA();
+        userRepository.save(user);
 
         EventEntity event = TestDataUtil.createTestEventA(user);
         underTest.save(event);
@@ -74,6 +79,7 @@ public class EventEntityRepositoryIntegrationTests {
     @Test
     public void testThatEventCanBeDeleted() {
         UserEntity user = TestDataUtil.createTestUserA();
+        userRepository.save(user);
 
         EventEntity event = TestDataUtil.createTestEventA(user);
         underTest.save(event);
@@ -87,6 +93,7 @@ public class EventEntityRepositoryIntegrationTests {
     @Test
     public void testThatEventCanBeRetrievedByUser() {
         UserEntity user = TestDataUtil.createTestUserA();
+        userRepository.save(user);
 
         EventEntity event = TestDataUtil.createTestEventA(user);
         underTest.save(event);

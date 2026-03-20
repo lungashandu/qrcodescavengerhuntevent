@@ -32,7 +32,12 @@ public class LocationRepositoryIntegrationTests {
 
     @Test
     public void testThatLocationCanBeCreatedAndRecalled() {
-        EventEntity event = TestDataUtil.createTestEventA(null);
+        UserEntity user = TestDataUtil.createTestUserA();
+        userRepository.save(user);
+
+        EventEntity event = TestDataUtil.createTestEventA(user);
+        eventRepository.save(event);
+
         LocationEntity location = TestDataUtil.createTestLocationA(event);
         underTest.save(location);
 
@@ -43,7 +48,11 @@ public class LocationRepositoryIntegrationTests {
 
     @Test
     public void testThatLocationCanBeRetrievedByEvent() {
-        EventEntity event = TestDataUtil.createTestEventA(null);
+        UserEntity user = TestDataUtil.createTestUserA();
+        userRepository.save(user);
+
+        EventEntity event = TestDataUtil.createTestEventA(user);
+        eventRepository.save(event);
 
         LocationEntity locationA = TestDataUtil.createTestLocationA(event);
         underTest.save(locationA);
@@ -60,7 +69,11 @@ public class LocationRepositoryIntegrationTests {
 
     @Test
     public void testThatLocationCanBeUpdated() {
-        EventEntity event = TestDataUtil.createTestEventA(null);
+        UserEntity user = TestDataUtil.createTestUserA();
+        userRepository.save(user);
+
+        EventEntity event = TestDataUtil.createTestEventA(user);
+        eventRepository.save(event);
 
         LocationEntity locationA = TestDataUtil.createTestLocationA(event);
         underTest.save(locationA);
@@ -75,7 +88,11 @@ public class LocationRepositoryIntegrationTests {
 
     @Test
     public void testThatEventCanBeDeleted() {
-        EventEntity event = TestDataUtil.createTestEventA(null);
+        UserEntity user = TestDataUtil.createTestUserA();
+        userRepository.save(user);
+
+        EventEntity event = TestDataUtil.createTestEventA(user);
+        eventRepository.save(event);
 
         LocationEntity locationA = TestDataUtil.createTestLocationA(event);
         underTest.save(locationA);

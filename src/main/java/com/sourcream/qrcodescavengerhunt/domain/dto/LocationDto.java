@@ -1,6 +1,5 @@
 package com.sourcream.qrcodescavengerhunt.domain.dto;
 
-import com.sourcream.qrcodescavengerhunt.domain.entities.EventEntity;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,6 +16,12 @@ public class LocationDto {
 
     @NotNull(message = "Each location has to be associated with an event")
     private Long eventId;
+
+    @NotNull(message= "Event name cannot be null for any location")
+    private String eventName;
+
+    @NotNull(message = "Each location must have a name")
+    private String name;
 
     private String qrCodeUrl;
 

@@ -6,19 +6,16 @@ import com.sourcream.qrcodescavengerhunt.domain.dto.ProgressSummaryDto;
 import com.sourcream.qrcodescavengerhunt.domain.entities.EventEntity;
 import com.sourcream.qrcodescavengerhunt.domain.entities.ProgressSummary;
 import com.sourcream.qrcodescavengerhunt.domain.entities.UserEntity;
-import com.sourcream.qrcodescavengerhunt.mappers.Mapper;
+import com.sourcream.qrcodescavengerhunt.mappers.ProgressSummaryMapper;
 import com.sourcream.qrcodescavengerhunt.services.EventService;
 import com.sourcream.qrcodescavengerhunt.services.ProgressService;
 import com.sourcream.qrcodescavengerhunt.services.UserService;
-import com.sourcream.qrcodescavengerhunt.services.impl.ProgressServiceImpl;
 import com.sourcream.qrcodescavengerhunt.util.UserContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,12 +26,11 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 @RestController
 public class ProgressController {
 
-    private Mapper<ProgressSummary, ProgressSummaryDto> progressMapper;
+    private ProgressSummaryMapper progressMapper;
     private ProgressService progressService;
     private UserService userService;
 
@@ -42,7 +38,7 @@ public class ProgressController {
     private UserContext userContext;
     private static final Logger logger = LoggerFactory.getLogger(ProgressController.class);
 
-    public ProgressController(Mapper<ProgressSummary, ProgressSummaryDto> progressMapper, ProgressService progressService, UserService userService, EventService eventService, UserContext userContext) {
+    public ProgressController(ProgressSummaryMapper progressMapper, ProgressService progressService, UserService userService, EventService eventService, UserContext userContext) {
         this.progressMapper = progressMapper;
         this.progressService = progressService;
         this.userService = userService;

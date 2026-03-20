@@ -1,5 +1,7 @@
 package com.sourcream.qrcodescavengerhunt;
 
+import com.sourcream.qrcodescavengerhunt.domain.dto.EventDto;
+import com.sourcream.qrcodescavengerhunt.domain.dto.LocationDto;
 import com.sourcream.qrcodescavengerhunt.domain.entities.*;
 import com.sourcream.qrcodescavengerhunt.domain.projection.UserLeaderboardProjection;
 
@@ -255,6 +257,52 @@ public final class TestDataUtil {
                 .userId(1L)
                 .locationId(1L)
                 .scannedAt(Instant.parse("2023-01-15T10:30:00Z"))
+                .build();
+    }
+
+    public static LocationDto createTestLocationDtoA() {
+        return LocationDto.builder()
+                .id(1L)
+                .eventId(1L)
+                .eventName("Summer Scavenger Hunt")
+                .name("City Center")
+                .qrCodeUrl("https://firebase.com/qrcode/citycenter.png")
+                .hint("Find the tallest building")
+                .challenge("Take a picture in front of it")
+                .build();
+    }
+
+    public static LocationDto createTestLocationDtoB() {
+        return LocationDto.builder()
+                .id(2L)
+                .eventId(1L)
+                .eventName("Summer Scavenger Hunt")
+                .name("Old Town Park")
+                .qrCodeUrl("https://firebase.com/qrcode/oldtownpark.png")
+                .hint("Look for the big oak tree")
+                .challenge("Find the hidden plaque beneath the tree")
+                .build();
+    }
+
+    public static EventDto createTestEventDtoA() {
+        return EventDto.builder()
+                .id(1L)
+                .eventName("Summer Scavenger Hunt")
+                .description("A fun-filled scavenger hunt around the city to explore hidden gems and landmarks.")
+                .startTime("2026-07-01T10:23:11")
+                .endTime("2026-07-01T16:00:00")
+                .userId(1L)
+                .build();
+    }
+
+    public static EventDto createTestEventDtoB() {
+        return EventDto.builder()
+                .id(2L)
+                .eventName("Museum Mystery Hunt")
+                .description("Solve riddles and clues to uncover secrets of the museum exhibits.")
+                .startTime("2026-08-10T12:00:00")
+                .endTime("2026-08-10T15:00:00")
+                .userId(1L)
                 .build();
     }
 }

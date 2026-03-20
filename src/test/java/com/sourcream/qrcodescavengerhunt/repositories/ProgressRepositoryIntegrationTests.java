@@ -42,6 +42,7 @@ public class ProgressRepositoryIntegrationTests {
     @Test
     public void testThatProgressCanBeCreatedAndRecalled(){
         UserEntity user = TestDataUtil.createTestUserA();
+        userRepository.save(user);
         EventEntity event = TestDataUtil.createTestEventA(user);
         eventRepository.save(event);
         LocationEntity location = TestDataUtil.createTestLocationA(event);
@@ -57,9 +58,9 @@ public class ProgressRepositoryIntegrationTests {
     @Test
     public void testThatMultipleProgressEntrieCanBeRetrieved() {
         UserEntity user = TestDataUtil.createTestUserA();
+        userRepository.save(user);
         EventEntity event = TestDataUtil.createTestEventA(user);
         eventRepository.save(event);
-        event.setUserEntity(null);
         LocationEntity locationA = TestDataUtil.createTestLocationA(event);
         locationRepository.save(locationA);
         ProgressEntity progressA = TestDataUtil.createTestProgressA(user, event, locationA);
@@ -84,9 +85,9 @@ public class ProgressRepositoryIntegrationTests {
     @Test
     public void testThatSummaryOfProgressCanBeRetrievedWhenMultipleProgressEntitiesExist() {
         UserEntity user = TestDataUtil.createTestUserA();
+        userRepository.save(user);
         EventEntity event = TestDataUtil.createTestEventA(user);
         eventRepository.save(event);
-        event.setUserEntity(null);
 
         LocationEntity locationA = TestDataUtil.createTestLocationA(event);
         locationRepository.save(locationA);
@@ -113,9 +114,9 @@ public class ProgressRepositoryIntegrationTests {
     @Test
     public void testThatSummaryOfProgressCanBeRetrievedWhenOneProgressEntitiesExist() {
         UserEntity user = TestDataUtil.createTestUserA();
+        userRepository.save(user);
         EventEntity event = TestDataUtil.createTestEventA(user);
         eventRepository.save(event);
-        event.setUserEntity(null);
 
         LocationEntity locationA = TestDataUtil.createTestLocationA(event);
         locationRepository.save(locationA);
@@ -136,7 +137,7 @@ public class ProgressRepositoryIntegrationTests {
         UserEntity userB = TestDataUtil.createTestUserB();
         userRepository.save(userB);
 
-        EventEntity event = TestDataUtil.createTestEventA(null);
+        EventEntity event = TestDataUtil.createTestEventA(userA);
         eventRepository.save(event);
 
         LocationEntity locationA = TestDataUtil.createTestLocationA(event);
@@ -180,7 +181,7 @@ public class ProgressRepositoryIntegrationTests {
         userRepository.save(userB);
         UserEntity userC = TestDataUtil.createTestUserC();
 
-        EventEntity event = TestDataUtil.createTestEventA(null);
+        EventEntity event = TestDataUtil.createTestEventA(userA);
         eventRepository.save(event);
 
         LocationEntity locationA = TestDataUtil.createTestLocationA(event);
@@ -228,7 +229,7 @@ public class ProgressRepositoryIntegrationTests {
         userRepository.save(userB);
         UserEntity userC = TestDataUtil.createTestUserC();
 
-        EventEntity event = TestDataUtil.createTestEventA(null);
+        EventEntity event = TestDataUtil.createTestEventA(userA);
         eventRepository.save(event);
 
         LocationEntity locationA = TestDataUtil.createTestLocationA(event);
@@ -269,7 +270,9 @@ public class ProgressRepositoryIntegrationTests {
 
     @Test
     public void findAllLeaderboardDataByEvent_whenNoParticipants_shouldReturnEmptyList() {
-        EventEntity event = TestDataUtil.createTestEventA(null);
+        UserEntity userA = TestDataUtil.createTestUserA();
+        userRepository.save(userA);
+        EventEntity event = TestDataUtil.createTestEventA(userA);
         eventRepository.save(event);
 
         List<UserLeaderboardProjection> results = underTest.findAllLeaderboardDataByEvent(event);
@@ -282,7 +285,7 @@ public class ProgressRepositoryIntegrationTests {
         UserEntity user = TestDataUtil.createTestUserA();
         userRepository.save(user);
 
-        EventEntity event = TestDataUtil.createTestEventA(null);
+        EventEntity event = TestDataUtil.createTestEventA(user);
         eventRepository.save(event);
 
         Optional<UserLeaderboardProjection> result = underTest.findUserLeaderboardData(user.getEmail(), event.getId());

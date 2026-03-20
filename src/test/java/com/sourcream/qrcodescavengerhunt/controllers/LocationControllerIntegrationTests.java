@@ -2,6 +2,7 @@ package com.sourcream.qrcodescavengerhunt.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sourcream.qrcodescavengerhunt.TestDataUtil;
+import com.sourcream.qrcodescavengerhunt.domain.dto.LocationDto;
 import com.sourcream.qrcodescavengerhunt.domain.entities.EventEntity;
 import com.sourcream.qrcodescavengerhunt.domain.entities.LocationEntity;
 import com.sourcream.qrcodescavengerhunt.domain.entities.UserEntity;
@@ -59,7 +60,7 @@ public class LocationControllerIntegrationTests {
         EventEntity event = TestDataUtil.createTestEventA(user);
         event = eventService.saveEvent(event);
 
-        LocationEntity location = TestDataUtil.createTestLocationA(event);
+        LocationDto location = TestDataUtil.createTestLocationDtoA();
         String locationJson = objectMapper.writeValueAsString(location);
 
         mockMvc.perform(
@@ -80,7 +81,7 @@ public class LocationControllerIntegrationTests {
         EventEntity event = TestDataUtil.createTestEventA(user);
         event = eventService.saveEvent(event);
 
-        LocationEntity location = TestDataUtil.createTestLocationA(event);
+        LocationDto location = TestDataUtil.createTestLocationDtoA();
         String locationJson = objectMapper.writeValueAsString(location);
 
         mockMvc.perform(
@@ -90,15 +91,9 @@ public class LocationControllerIntegrationTests {
         ).andExpect(
                 MockMvcResultMatchers.jsonPath("$.id").value(location.getId())
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.eventEntity.id").value(event.getId())
+                MockMvcResultMatchers.jsonPath("$.eventId").value(location.getEventId())
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.eventEntity.eventName").value(event.getEventName())
-        ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.eventEntity.description").value(event.getDescription())
-        ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.eventEntity.startTime").value(event.getStartTime())
-        ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.eventEntity.endTime").value(event.getEndTime())
+                MockMvcResultMatchers.jsonPath("$.eventName").value(location.getEventName())
         ).andExpect(
                 MockMvcResultMatchers.jsonPath("$.hint").value(location.getHint())
         ).andExpect(
@@ -149,25 +144,21 @@ public class LocationControllerIntegrationTests {
         LocationEntity location = TestDataUtil.createTestLocationA(event);
         locationService.saveLocation(location);
 
+        LocationDto locationDto = TestDataUtil.createTestLocationDtoA();
+
         mockMvc.perform(
                 MockMvcRequestBuilders.get("/locations/1")
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(
                 MockMvcResultMatchers.jsonPath("$.id").value(location.getId())
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.eventEntity.id").value(event.getId())
+                MockMvcResultMatchers.jsonPath("$.eventId").value(locationDto.getEventId())
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.eventEntity.eventName").value(event.getEventName())
+                MockMvcResultMatchers.jsonPath("$.eventName").value(locationDto.getEventName())
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.eventEntity.description").value(event.getDescription())
+                MockMvcResultMatchers.jsonPath("$.hint").value(locationDto.getHint())
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.eventEntity.startTime").value(event.getStartTime())
-        ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.eventEntity.endTime").value(event.getEndTime())
-        ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.hint").value(location.getHint())
-        ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.challenge").value(location.getChallenge())
+                MockMvcResultMatchers.jsonPath("$.challenge").value(locationDto.getChallenge())
         );
     }
 
@@ -198,11 +189,14 @@ public class LocationControllerIntegrationTests {
         user = userService.saveUser(user);
 
         EventEntity event = TestDataUtil.createTestEventA(user);
+        eventService.saveEvent(event);
 
         LocationEntity location = TestDataUtil.createTestLocationA(event);
         locationService.saveLocation(location);
 
         String eventJson = objectMapper.writeValueAsString(event);
+
+        LocationDto locationDto = TestDataUtil.createTestLocationDtoA();
 
         mockMvc.perform(
                 MockMvcRequestBuilders.get("/locations/by-event")
@@ -211,17 +205,11 @@ public class LocationControllerIntegrationTests {
         ).andExpect(
                 MockMvcResultMatchers.status().isOk()
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$[0].id").value(location.getId())
+                MockMvcResultMatchers.jsonPath("$[0].id").value(locationDto.getId())
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$[0].eventEntity.id").value(event.getId())
+                MockMvcResultMatchers.jsonPath("$[0].eventId").value(locationDto.getEventId())
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$[0].eventEntity.eventName").value(event.getEventName())
-        ).andExpect(
-                MockMvcResultMatchers.jsonPath("$[0].eventEntity.description").value(event.getDescription())
-        ).andExpect(
-                MockMvcResultMatchers.jsonPath("$[0].eventEntity.startTime").value(event.getStartTime())
-        ).andExpect(
-                MockMvcResultMatchers.jsonPath("$[0].eventEntity.endTime").value(event.getEndTime())
+                MockMvcResultMatchers.jsonPath("$[0].eventName").value(locationDto.getEventName())
         ).andExpect(
                 MockMvcResultMatchers.jsonPath("$[0].hint").value(location.getHint())
         ).andExpect(
@@ -236,13 +224,16 @@ public class LocationControllerIntegrationTests {
         user = userService.saveUser(user);
 
         EventEntity event = TestDataUtil.createTestEventA(user);
+        eventService.saveEvent(event);
 
         LocationEntity location = TestDataUtil.createTestLocationA(event);
         locationService.saveLocation(location);
 
-        LocationEntity updatedLocation = TestDataUtil.createTestLocationA(event);
-        updatedLocation.setHint("");
+        LocationDto updatedLocation = TestDataUtil.createTestLocationDtoA();
+        updatedLocation.setHint("hello");
         updatedLocation.setChallenge("Snap a selfie with one of the lions");
+
+        System.out.println(updatedLocation);
 
         String locationJson = objectMapper.writeValueAsString(updatedLocation);
 
@@ -255,17 +246,11 @@ public class LocationControllerIntegrationTests {
         ).andExpect(
                 MockMvcResultMatchers.jsonPath("$.id").value(updatedLocation.getId())
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.eventEntity.id").value(event.getId())
+                MockMvcResultMatchers.jsonPath("$.eventId").value(updatedLocation.getEventId())
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.eventEntity.eventName").value(event.getEventName())
+                MockMvcResultMatchers.jsonPath("$.eventName").value(updatedLocation.getEventName())
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.eventEntity.description").value(event.getDescription())
-        ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.eventEntity.startTime").value(event.getStartTime())
-        ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.eventEntity.endTime").value(event.getEndTime())
-        ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.hint").value(location.getHint())
+                MockMvcResultMatchers.jsonPath("$.hint").value(updatedLocation.getHint())
         ).andExpect(
                 MockMvcResultMatchers.jsonPath("$.challenge").value(updatedLocation.getChallenge())
         );
@@ -289,6 +274,7 @@ public class LocationControllerIntegrationTests {
         user = userService.saveUser(user);
 
         EventEntity event = TestDataUtil.createTestEventA(user);
+        eventService.saveEvent(event);
 
         LocationEntity location = TestDataUtil.createTestLocationA(event);
         locationService.saveLocation(location);

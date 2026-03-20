@@ -6,7 +6,6 @@ import com.sourcream.qrcodescavengerhunt.domain.entities.EventEntity;
 import com.sourcream.qrcodescavengerhunt.domain.entities.LocationEntity;
 import com.sourcream.qrcodescavengerhunt.mappers.Mapper;
 import com.sourcream.qrcodescavengerhunt.services.LocationService;
-import com.sourcream.qrcodescavengerhunt.services.impl.LocationServiceImpl;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +15,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController

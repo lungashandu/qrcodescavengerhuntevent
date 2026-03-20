@@ -1,13 +1,12 @@
 package com.sourcream.qrcodescavengerhunt.domain.dto;
 
-import com.sourcream.qrcodescavengerhunt.domain.entities.UserEntity;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
@@ -33,5 +32,4 @@ public class EventDto {
     private String endTime;
 
     private Long userId;
-    private String userFullName;
 }

@@ -2,11 +2,12 @@ package com.sourcream.qrcodescavengerhunt.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sourcream.qrcodescavengerhunt.TestDataUtil;
-import com.sourcream.qrcodescavengerhunt.security.WithMockOidcUser;
-import com.sourcream.qrcodescavengerhunt.security.config.TestSecurityConfig;
 import com.sourcream.qrcodescavengerhunt.domain.entities.Role;
 import com.sourcream.qrcodescavengerhunt.domain.entities.UserEntity;
+import com.sourcream.qrcodescavengerhunt.security.WithMockOidcUser;
+import com.sourcream.qrcodescavengerhunt.security.config.TestSecurityConfig;
 import com.sourcream.qrcodescavengerhunt.services.UserService;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+@Disabled("UserController is currently disabled")
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @ActiveProfiles("test")

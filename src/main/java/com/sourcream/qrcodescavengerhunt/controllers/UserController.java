@@ -1,60 +1,37 @@
 package com.sourcream.qrcodescavengerhunt.controllers;
 
-import com.google.api.Http;
 import com.sourcream.qrcodescavengerhunt.domain.dto.UserDto;
 import com.sourcream.qrcodescavengerhunt.domain.entities.Role;
 import com.sourcream.qrcodescavengerhunt.domain.entities.UserEntity;
-import com.sourcream.qrcodescavengerhunt.mappers.Mapper;
+import com.sourcream.qrcodescavengerhunt.mappers.UserMapper;
 import com.sourcream.qrcodescavengerhunt.services.UserService;
-import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 
-@RestController
+//@RestController
 public class UserController {
 
     private UserService userService;
 
-    private Mapper<UserEntity, UserDto> userMapper;
+    private UserMapper userMapper;
 
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
-    public UserController(UserService userService, Mapper<UserEntity, UserDto> userMapper) {
+    public UserController(UserService userService, UserMapper userMapper) {
         this.userService = userService;
         this.userMapper = userMapper;
     }
 
-    @PostMapping(path = "/users")
-    public ResponseEntity<?> createUser(@Valid @RequestBody UserDto userDto) {
-        try {
-            UserEntity userEntity = userMapper.mapFrom(userDto);
-            UserEntity savedUserEntity = userService.saveUser(userEntity);
-
-            logger.info("Created new user with email = {}", savedUserEntity.getEmail());
-
-            return new ResponseEntity<>(userMapper.mapTo(savedUserEntity), HttpStatus.CREATED);
-
-        } catch (ResponseStatusException e) {
-            throw e;
-        } catch (Exception e) {
-            logger.error("Unexpected error while creating user with email = {}", userDto.getEmail(), e);
-
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                    "error", "Failed to create user",
-                    "timestamp", Instant.now()
-            ));
-        }
-    }
-
-    @GetMapping(path = "/users/{email}")
+    //@GetMapping(path = "/users/{email}")
     public ResponseEntity<?> getUser(@PathVariable("email") String email) {
         try {
             if (email == null || email.isBlank()){
@@ -86,7 +63,7 @@ public class UserController {
         }
     }
 
-    @DeleteMapping(path = "/users/{id}")
+    //@DeleteMapping(path = "/users/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable("id") Long id) {
         try {
             if (id == null || id <= 0){
@@ -119,7 +96,7 @@ public class UserController {
         }
     }
 
-    @PatchMapping("/users/{id}/role")
+    //@PatchMapping("/users/{id}/role")
     public ResponseEntity<?> updateUserRole(@PathVariable("id") Long id, @RequestBody Role role) {
         try {
             if (id == null || id <= 0) {
