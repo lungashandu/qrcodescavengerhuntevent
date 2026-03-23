@@ -8,6 +8,7 @@ import com.sourcream.qrcodescavengerhunt.domain.projection.ScannedLocationCard;
 import com.sourcream.qrcodescavengerhunt.repositories.*;
 import com.sourcream.qrcodescavengerhunt.services.ProgressService;
 import com.sourcream.qrcodescavengerhunt.util.CalculateScore;
+import com.sourcream.qrcodescavengerhunt.util.EventValidationUtil;
 import com.sourcream.qrcodescavengerhunt.util.UserContext;
 import jakarta.persistence.EntityManager;
 import org.slf4j.Logger;
@@ -80,6 +81,8 @@ public class ProgressServiceImpl implements ProgressService {
             Optional<UserEntity> user = email != null
                     ? userRepository.findByEmail(email)
                     : Optional.empty();
+
+            progressValidation(eventID);
 
             if(user.isPresent()){
                 if (!scanLocation(user.get().getId(), locationID)){
@@ -506,5 +509,16 @@ public class ProgressServiceImpl implements ProgressService {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to build anonymous progress summary");
         }
 
+    }
+
+    private void progressValidation(Long eventId) {
+        EventEntity event = eventRepository.findById(eventId).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "Event " + eventId + " not found")
+        );
+
+        String startDate = event.getStartTime();
+        String endDate = event.getEndTime();
+
+        EventValidationUtil.validateEventIsActive(startDate, endDate);
     }
 }
