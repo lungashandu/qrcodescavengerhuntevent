@@ -30,7 +30,7 @@ public class EventEntity {
     @Column(name = "endTime")
     private String endTime;
 
-    @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "userId")
+    @ManyToOne
+    @JoinColumn(name = "userId", nullable = false)
     private UserEntity userEntity;
 }
