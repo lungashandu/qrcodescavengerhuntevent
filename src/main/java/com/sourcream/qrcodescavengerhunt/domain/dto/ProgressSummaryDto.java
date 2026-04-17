@@ -12,8 +12,7 @@ import lombok.NoArgsConstructor;
 public class ProgressSummaryDto {
 
     private Integer score;
-
     private String eventName;
-
+    private String locationName;
     private Long count;
 }

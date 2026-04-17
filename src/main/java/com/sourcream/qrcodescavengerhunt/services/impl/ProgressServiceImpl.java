@@ -94,13 +94,14 @@ public class ProgressServiceImpl implements ProgressService {
                 ProgressEntity savedProgress = progressRepository.save(progress);
 
                 ProgressSummary summary = progressRepository.getProgressSummary(user.get(), savedProgress.getEventEntity());
-                logger.info("Progress Summary: score={}, eventName={}, count={}", summary.getScore(), summary.getEventName(), summary.getCount());
+                summary.setLocationName(savedProgress.getLocationEntity().getName());
+                logger.info("Progress Summary: score={}, eventName={}, locationName={}, count={}", summary.getScore(), summary.getEventName(), summary.getLocationName(), summary.getCount());
 
                 return summary;
 
             } else {
-                logger.info("Anonymous user processing on event = {}", eventID);
-                return progressSummaryBuilderForAnonymousUser(eventID);
+                logger.info("Anonymous user processing on event = {}, location = {}", eventID, locationID);
+                return progressSummaryBuilderForAnonymousUser(eventID, locationID);
 
             }
         } catch (ResponseStatusException e) {
@@ -162,6 +163,7 @@ public class ProgressServiceImpl implements ProgressService {
             return new EventProgressOverview(
                     event.getId(),
                     event.getEventName(),
+                    event.getDescription(),
                     scannedCount,
                     totalLocations,
                     remaining,
@@ -430,7 +432,7 @@ public class ProgressServiceImpl implements ProgressService {
     public ProgressEntity progressEntityBuilder(Long eventID, Long locationID, UserEntity user) {
         try {
             if (eventID == null || locationID == null || user == null) {
-                logger.warn("ProgressEntity build failed due to null input (eventID = {}, user = {})",
+                logger.warn("ProgressEntity build failed due to null input (eventID = {}, locationID = {}, user = {})",
                         eventID, locationID, user != null ? user.getEmail() : "null");
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Event ID, Location ID, and User must not be null");
             }
@@ -474,11 +476,11 @@ public class ProgressServiceImpl implements ProgressService {
         }
     }
 
-    public ProgressSummary progressSummaryBuilderForAnonymousUser(Long eventID){
+    public ProgressSummary progressSummaryBuilderForAnonymousUser(Long eventID, Long locationID){
         try {
-            if (eventID == null) {
-                logger.warn("Anonymous progress summary requested with null eventID");
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Event ID must not be null");
+            if (eventID == null || locationID == null) {
+                logger.warn("Anonymous progress summary requested with null eventID or null locationID");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Event and Location ID must not be null");
             }
 
             EventEntity event = eventRepository.findById(eventID).orElse(null);
@@ -494,11 +496,20 @@ public class ProgressServiceImpl implements ProgressService {
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to prepare event entity");
             }
 
+
+            LocationEntity location = locationRepository.findById(locationID)
+                    .orElseThrow(() -> {
+                        logger.warn("Np location found for ID={}", locationID);
+                        return new ResponseStatusException(HttpStatus.NOT_FOUND, "Location " + locationID + " not found");
+                    });
+            String locationName = location.getName();
+
             List<LocationEntity> locations = locationRepository.findByEventEntity(event);
             long numberOfLocations = (locations != null) ? locations.size() : 0L;
 
             return ProgressSummary.builder()
                     .eventName(event.getEventName())
+                    .locationName(locationName)
                     .count(numberOfLocations)
                     .score(null)
                     .build();

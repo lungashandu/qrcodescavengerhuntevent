@@ -16,6 +16,7 @@ public class ProgressSummaryMapper {
                 .score(progressSummary.getScore() != null ?
                         progressSummary.getScore().intValue() : null)
                 .eventName(progressSummary.getEventName())
+                .locationName(progressSummary.getLocationName())
                 .count(progressSummary.getCount())
                 .build();
     }
