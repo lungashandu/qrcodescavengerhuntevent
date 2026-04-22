@@ -103,6 +103,28 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Override
+    public List<LocationEntity> getLocationByEventId(Long id) {
+        try {
+            if (id == null || id == 0) {
+                logger.warn("Attempted to retrieve locations with null event id");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Event id must not be null");
+            }
+
+            List<LocationEntity> locations = locationRepository.findByEventEntityId(id);
+
+            if (locations.isEmpty()) {
+                logger.info("No locations found for event {}", id);
+            }
+
+            return locations;
+
+        } catch (Exception e) {
+            logger.error("Unexpected error while retrieving locations for event {}", id, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve locations for event " + id);
+        }
+    }
+
+    @Override
     public Optional<LocationEntity> getLocationById(Long id) {
         try {
             if (id == null || id <= 0) {

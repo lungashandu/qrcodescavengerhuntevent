@@ -219,6 +219,52 @@ public class LocationControllerIntegrationTests {
 
     @Test
     @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
+    public void testThatGetLocationByEventIdReturnsEmptyListWhenNoLocationsAreAvailable() throws Exception {
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.get("/locations/event/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(
+                MockMvcResultMatchers.status().isOk()
+        ).andExpect(
+                MockMvcResultMatchers.content().json("[]")
+        );
+    }
+
+    @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
+    public void testThatGetLocationByEventIdReturnsLocationsWhenAvailable() throws Exception {
+        UserEntity user = TestDataUtil.createTestUserA();
+        user = userService.saveUser(user);
+
+        EventEntity event = TestDataUtil.createTestEventA(user);
+        eventService.saveEvent(event);
+
+        LocationEntity location = TestDataUtil.createTestLocationA(event);
+        locationService.saveLocation(location);
+
+        LocationDto locationDto = TestDataUtil.createTestLocationDtoA();
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.get("/locations/event/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(
+                MockMvcResultMatchers.status().isOk()
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$[0].id").value(locationDto.getId())
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$[0].eventId").value(locationDto.getEventId())
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$[0].eventName").value(locationDto.getEventName())
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$[0].hint").value(location.getHint())
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$[0].challenge").value(location.getChallenge())
+        );
+    }
+
+    @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
     public void testThatUpdateLocationReturnsHttpStatus200AndDoesntChangeToNullIfNoValueProvided() throws Exception {
         UserEntity user = TestDataUtil.createTestUserA();
         user = userService.saveUser(user);

@@ -126,6 +126,30 @@ public class LocationController {
         }
     }
 
+    @GetMapping("/locations/event/{id}")
+    public ResponseEntity<?> getLocationsByEventId(@PathVariable("id") Long id) {
+        try {
+            if (id == null || id == 0) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "error", "Event id is null, cannot retrieve locations with null event id",
+                        "timestamp", Instant.now()
+                ));
+            }
+
+            List<LocationEntity> locations = locationService.getLocationByEventId(id);
+            List<LocationDto> locationDtos = locations.stream().map(locationMapper::mapTo).toList();
+
+            return ResponseEntity.ok(locationDtos);
+
+        } catch (Exception e) {
+            logger.error("Failed to locations for event {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                  "error", "unexpected server error",
+                  "timestamp", Instant.now()
+            ));
+        }
+    }
+
     @PatchMapping("/locations/{id}")
     public ResponseEntity<?> locationUpdate(@PathVariable("id") Long id, @RequestBody LocationDto locationDto){
         try {

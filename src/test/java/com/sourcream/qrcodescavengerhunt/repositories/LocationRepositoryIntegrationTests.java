@@ -68,6 +68,27 @@ public class LocationRepositoryIntegrationTests {
     }
 
     @Test
+    public void testThatLocationCanBeRetrievedByEventID() {
+        UserEntity user = TestDataUtil.createTestUserA();
+        userRepository.save(user);
+
+        EventEntity event = TestDataUtil.createTestEventA(user);
+        eventRepository.save(event);
+
+        LocationEntity locationA = TestDataUtil.createTestLocationA(event);
+        underTest.save(locationA);
+
+        LocationEntity locationB = TestDataUtil.createTestLocationB(event);
+        underTest.save(locationB);
+
+        LocationEntity locationC = TestDataUtil.createTestLocationC(event);
+        underTest.save(locationC);
+
+        Iterable<LocationEntity> result = underTest.findByEventEntityId(event.getId());
+        assertThat(result).hasSize(3).containsExactly(locationA, locationB, locationC);
+    }
+
+    @Test
     public void testThatLocationCanBeUpdated() {
         UserEntity user = TestDataUtil.createTestUserA();
         userRepository.save(user);
