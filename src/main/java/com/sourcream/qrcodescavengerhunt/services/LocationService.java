@@ -12,6 +12,8 @@ public interface LocationService {
 
     List<LocationEntity> getLocationByEvent(EventEntity event);
 
+    List<LocationEntity> getLocationByEventId(Long id);
+
     Optional<LocationEntity> getLocationById(Long id);
 
     Boolean isExists(Long id);
