@@ -78,7 +78,7 @@ public class ProgressController {
         }
     }
 
-    @GetMapping("/progress/events/{id}")
+    @GetMapping("/events/overview/{id}")
     public ResponseEntity<?> getEventProgress(@PathVariable Long id) {
         String email = userContext.getCurrentUserEmail();
         UserEntity user = userService.getUserByEmail(email).orElseThrow(() -> new ResponseStatusException(
@@ -96,7 +96,7 @@ public class ProgressController {
         return ResponseEntity.ok(overview);
     }
 
-    @GetMapping("/progress/{eventId}/top")
+    @GetMapping("/events/{eventId}/top")
     public ResponseEntity<?> getLeaderboard(@PathVariable Long eventId) {
         try {
             if (eventId == null || eventId <= 0) {
@@ -135,7 +135,7 @@ public class ProgressController {
 
     }
 
-    @GetMapping("/progress/{eventId}/leaderboard/me")
+    @GetMapping("/events/{eventId}/leaderboard/me")
     public ResponseEntity<?> getMyLeaderboardPosition(@PathVariable Long eventId, Authentication authentication) {
         try {
             if (eventId == null || eventId <= 0){
