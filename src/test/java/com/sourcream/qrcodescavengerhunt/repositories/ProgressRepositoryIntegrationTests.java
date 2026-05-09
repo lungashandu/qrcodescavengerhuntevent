@@ -348,4 +348,36 @@ public class ProgressRepositoryIntegrationTests {
 
         assertThat(count).isEqualTo(2);
     }
+
+    @Test
+    public void findFirstByUserEntityAndEventEntityOrderByScanTimeDesc_ShouldReturnCorrectProgress() {
+        UserEntity user = TestDataUtil.createTestUserA();
+        userRepository.save(user);
+
+        EventEntity event = TestDataUtil.createTestEventA(user);
+        eventRepository.save(event);
+
+        LocationEntity locationA = TestDataUtil.createTestLocationA(event);
+        locationRepository.save(locationA);
+
+        LocationEntity locationB = TestDataUtil.createTestLocationB(event);
+        locationRepository.save(locationB);
+
+        LocationEntity locationC = TestDataUtil.createTestLocationC(event);
+        locationRepository.save(locationC);
+
+        ProgressEntity progressA = TestDataUtil.createTestProgressA(user, event, locationA);
+        underTest.save(progressA);
+
+        ProgressEntity progressB = TestDataUtil.createTestProgressB(user, event, locationB);
+        underTest.save(progressB);
+
+        ProgressEntity progressC = TestDataUtil.createTestProgressC(user, event, locationC);
+        underTest.save(progressC);
+
+        Optional<ProgressEntity> result = underTest.findFirstByUserEntityAndEventEntityOrderByIdDesc(user,event);
+
+        assertThat(result).isPresent();
+        assertThat(result.get()).isEqualTo(progressC);
+    }
 }

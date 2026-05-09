@@ -92,6 +92,7 @@ public class ProgressServiceImpl implements ProgressService {
 
                 ProgressEntity progress = progressEntityBuilder(eventID, locationID, user.get());
                 ProgressEntity savedProgress = progressRepository.save(progress);
+                logger.info("Saved progress: {}", savedProgress);
 
                 ProgressSummary summary = progressRepository.getProgressSummary(user.get(), savedProgress.getEventEntity());
                 summary.setLocationName(savedProgress.getLocationEntity().getName());
@@ -160,6 +161,19 @@ public class ProgressServiceImpl implements ProgressService {
             List<ScannedLocationCard> scannedCards = progressRepository.findScanCardsByUserAndEvent(user, event);
             long remaining = totalLocations - scannedCount;
 
+            String nextLocationHint = null;
+            if (remaining > 0) {
+                Optional<ProgressEntity> latestProgress = progressRepository.findFirstByUserEntityAndEventEntityOrderByIdDesc(user, event);
+                logger.info("Latest progress: {}", latestProgress.isPresent() ? latestProgress.get() : "no progress found");
+                if (latestProgress.isPresent()) {
+                    nextLocationHint = latestProgress.get().getLocationEntity().getHint();
+                } else {
+                    nextLocationHint = locationRepository.findTopByEventEntityOrderByIdDesc(event)
+                            .map(LocationEntity::getHint)
+                            .orElse(null);
+                }
+            }
+
             return new EventProgressOverview(
                     event.getId(),
                     event.getEventName(),
@@ -167,7 +181,8 @@ public class ProgressServiceImpl implements ProgressService {
                     scannedCount,
                     totalLocations,
                     remaining,
-                    scannedCards
+                    scannedCards,
+                    nextLocationHint
             );
 
         }catch (ResponseStatusException e) {

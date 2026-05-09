@@ -356,7 +356,7 @@ public class ProgressControllerIntegrationTests {
         setupAuthentication(user.getEmail());
         progressService.saveProgress(event.getId(), locationA.getId());
         progressService.saveProgress(event.getId(), locationB.getId());
-        progressService.saveProgress(event.getId(), locationC.getId());
+        progressService.saveProgress(event.getId(),locationC.getId());
 
         mockMvc.perform(
                 MockMvcRequestBuilders.get("/events/overview/1")
@@ -368,7 +368,8 @@ public class ProgressControllerIntegrationTests {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.remaining").value(0))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.scannedLocations").isArray())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.scannedLocations[0].score").isNumber())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.scannedLocations[0].scanTime").exists());
+                .andExpect(MockMvcResultMatchers.jsonPath("$.scannedLocations[0].scanTime").exists())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.nextLocationHint").doesNotExist());
     }
 
     @Test
