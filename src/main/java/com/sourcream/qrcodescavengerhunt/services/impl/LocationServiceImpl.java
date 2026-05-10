@@ -51,7 +51,7 @@ public class LocationServiceImpl implements LocationService {
 
             LocationEntity savedLocation = locationRepository.save(locationEntity);
 
-            String locationPath = "progress/"
+            String locationPath = "scan/"
                     + savedLocation.getEventEntity().getId() + "/"
                     + savedLocation.getId();
 
@@ -60,9 +60,6 @@ public class LocationServiceImpl implements LocationService {
             savedLocation.setQrCodeUrl(uploadResult.downloadUrl());
 
             savedLocation = locationRepository.save(savedLocation);
-
-            logger.info("Location {} for event {} saved with QR code at {}",
-                    savedLocation.getId(), savedLocation.getEventEntity().getId(), uploadResult);
 
             return savedLocation;
 

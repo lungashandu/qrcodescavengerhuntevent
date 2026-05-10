@@ -179,7 +179,7 @@ public class ProgressControllerIntegrationTests {
         setupAuthentication(userC.getEmail());
         progressService.saveProgress(event.getId(), locationA.getId());
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/progress/1/top")
+        mockMvc.perform(MockMvcRequestBuilders.get("/events/1/top")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$[0].fullname").value(userA.getFullname()))
@@ -237,7 +237,7 @@ public class ProgressControllerIntegrationTests {
         setupAuthentication(userC.getEmail());
         progressService.saveProgress(event.getId(), locationA.getId());
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/progress/1/leaderboard/me")
+        mockMvc.perform(MockMvcRequestBuilders.get("/events/1/leaderboard/me")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.fullname").value(userC.getFullname()))
@@ -248,7 +248,7 @@ public class ProgressControllerIntegrationTests {
     @Test
     @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
     public void testGetTopLeaderboardForNonExistentEventReturnsEmptyList() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/progress/1/top"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/events/1/top"))
                 .andExpect(MockMvcResultMatchers.status().isNotFound())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.error").value("Event 1 was not found"));
     }
@@ -287,7 +287,7 @@ public class ProgressControllerIntegrationTests {
         //User C progress
         setupAuthentication(userC.getEmail());
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/progress/1/leaderboard/me")
+        mockMvc.perform(MockMvcRequestBuilders.get("/events/1/leaderboard/me")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.fullname").value(userC.getFullname()))
@@ -330,7 +330,7 @@ public class ProgressControllerIntegrationTests {
         setupAuthentication(userC.getEmail());
         progressService.saveProgress(event.getId(), locationA.getId());
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/progress/1/top"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/events/1/top"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$[0].fullname").value("John Doe"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$[1].fullname").value("Jane Smith"))
@@ -356,10 +356,10 @@ public class ProgressControllerIntegrationTests {
         setupAuthentication(user.getEmail());
         progressService.saveProgress(event.getId(), locationA.getId());
         progressService.saveProgress(event.getId(), locationB.getId());
-        progressService.saveProgress(event.getId(), locationC.getId());
+        progressService.saveProgress(event.getId(),locationC.getId());
 
         mockMvc.perform(
-                MockMvcRequestBuilders.get("/progress/events/1")
+                MockMvcRequestBuilders.get("/events/overview/1")
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.eventId").value(1))
@@ -368,7 +368,8 @@ public class ProgressControllerIntegrationTests {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.remaining").value(0))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.scannedLocations").isArray())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.scannedLocations[0].score").isNumber())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.scannedLocations[0].scanTime").exists());
+                .andExpect(MockMvcResultMatchers.jsonPath("$.scannedLocations[0].scanTime").exists())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.nextLocationHint").doesNotExist());
     }
 
     @Test
@@ -388,7 +389,7 @@ public class ProgressControllerIntegrationTests {
         locationService.saveLocation(locationC);
 
         mockMvc.perform(
-                        MockMvcRequestBuilders.get("/progress/events/1")
+                        MockMvcRequestBuilders.get("/events/overview/1")
                                 .contentType(MediaType.APPLICATION_JSON)
                 ).andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.scannedCount").value(0))

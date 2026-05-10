@@ -145,4 +145,26 @@ public class LocationRepositoryIntegrationTests {
 
         assertThat(count).isEqualTo(3);
     }
+
+    @Test
+    public void testFindTopByEventEntityOrderByIdReturnsCorrectLocationEntity() {
+        UserEntity user = TestDataUtil.createTestUserA();
+        userRepository.save(user);
+
+        EventEntity event = TestDataUtil.createTestEventA(user);
+        eventRepository.save(event);
+
+        LocationEntity locationA = TestDataUtil.createTestLocationA(event);
+        underTest.save(locationA);
+
+        LocationEntity locationB = TestDataUtil.createTestLocationB(event);
+        underTest.save(locationB);
+
+        LocationEntity locationC = TestDataUtil.createTestLocationC(event);
+        underTest.save(locationC);
+
+        Optional<LocationEntity> result = underTest.findTopByEventEntityOrderByIdDesc(event);
+        assertThat(result).isPresent();
+        assertThat(result.get()).isEqualTo(locationC);
+    }
 }

@@ -18,7 +18,7 @@ import java.util.Optional;
 public interface ProgressRepository extends JpaRepository<ProgressEntity, Long> {
     List<ProgressEntity> findByUserEntityAndEventEntity(UserEntity user, EventEntity event);
 
-    Optional<ProgressEntity> findFirstByUserEntityAndEventEntityOrderByScanTimeDesc(@Param("user")UserEntity user, @Param("event") EventEntity event);
+    Optional<ProgressEntity> findFirstByUserEntityAndEventEntityOrderByIdDesc(@Param("user")UserEntity user, @Param("event") EventEntity event);
 
 
     @Query("""
