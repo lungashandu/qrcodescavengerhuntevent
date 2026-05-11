@@ -5,6 +5,7 @@ import com.sourcream.qrcodescavengerhunt.domain.entities.UserEntity;
 import com.sourcream.qrcodescavengerhunt.repositories.EventRepository;
 import com.sourcream.qrcodescavengerhunt.repositories.UserRepository;
 import com.sourcream.qrcodescavengerhunt.services.EventService;
+import com.sourcream.qrcodescavengerhunt.util.AccessControlService;
 import com.sourcream.qrcodescavengerhunt.util.UserContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,12 +26,14 @@ public class EventServiceImpl implements EventService {
     private UserRepository userRepository;
 
     private UserContext userContext;
+    private final AccessControlService accessControlService;
     private static final Logger logger = LoggerFactory.getLogger(EventServiceImpl.class);
 
-    public EventServiceImpl(EventRepository eventRepository, UserRepository userRepository, UserContext userContext) {
+    public EventServiceImpl(EventRepository eventRepository, UserRepository userRepository, UserContext userContext, AccessControlService accessControlService) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.userContext = userContext;
+        this.accessControlService = accessControlService;
     }
 
     @Override
@@ -175,6 +178,7 @@ public class EventServiceImpl implements EventService {
             Optional<EventEntity> result = eventRepository.findById(id);
             if(result.isPresent()){
                 EventEntity existingEvent = result.get();
+                accessControlService.requireEventOwnerOrAdmin(existingEvent);
                 existingEvent.setEventName(event.getEventName());
                 existingEvent.setDescription(event.getDescription());
                 existingEvent.setStartTime(event.getStartTime());
@@ -216,6 +220,13 @@ public class EventServiceImpl implements EventService {
                 logger.warn("User {} attempted to delete non-existent event ID {}", userEmail, id);
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found");
             }
+
+            EventEntity existingEvent = eventRepository.findById(id).orElseThrow(
+                    () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            "Event not found")
+            );
+
+            accessControlService.requireEventOwnerOrAdmin(existingEvent);
 
             logger.info("{} is attempting to delete event {}", userEmail, id);
             eventRepository.deleteById(id);

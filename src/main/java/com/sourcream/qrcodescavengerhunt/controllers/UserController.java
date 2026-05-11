@@ -5,6 +5,7 @@ import com.sourcream.qrcodescavengerhunt.domain.entities.Role;
 import com.sourcream.qrcodescavengerhunt.domain.entities.UserEntity;
 import com.sourcream.qrcodescavengerhunt.mappers.UserMapper;
 import com.sourcream.qrcodescavengerhunt.services.UserService;
+import com.sourcream.qrcodescavengerhunt.util.AccessControlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -25,12 +26,14 @@ public class UserController {
     private UserService userService;
 
     private UserMapper userMapper;
+    private final AccessControlService accessControlService;
 
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
-    public UserController(UserService userService, UserMapper userMapper) {
+    public UserController(UserService userService, UserMapper userMapper, AccessControlService accessControlService) {
         this.userService = userService;
         this.userMapper = userMapper;
+        this.accessControlService = accessControlService;
     }
 
     @GetMapping(path = "/users/{email}")
@@ -44,6 +47,7 @@ public class UserController {
                 ));
             }
 
+            accessControlService.requireSameUserOrAdmin(email);
             Optional<UserEntity> foundUser = userService.getUserByEmail(email);
             if (foundUser.isPresent()){
                 UserDto userDto = userMapper.mapTo(foundUser.get());

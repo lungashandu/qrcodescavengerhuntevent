@@ -5,6 +5,7 @@ import com.sourcream.qrcodescavengerhunt.domain.entities.LocationEntity;
 import com.sourcream.qrcodescavengerhunt.repositories.EventRepository;
 import com.sourcream.qrcodescavengerhunt.repositories.LocationRepository;
 import com.sourcream.qrcodescavengerhunt.services.LocationService;
+import com.sourcream.qrcodescavengerhunt.util.AccessControlService;
 import com.sourcream.qrcodescavengerhunt.util.QRCodeGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,14 +22,16 @@ public class LocationServiceImpl implements LocationService {
 
     LocationRepository locationRepository;
     private final EventRepository eventRepository;
+    private final AccessControlService accessControlService;
 
     QRCodeGenerator qrCodeGenerator;
     private static final Logger logger = LoggerFactory.getLogger(LocationServiceImpl.class);
 
-    public LocationServiceImpl(LocationRepository locationRepository, EventRepository eventRepository, QRCodeGenerator qrCodeGenerator) {
+    public LocationServiceImpl(LocationRepository locationRepository, EventRepository eventRepository, QRCodeGenerator qrCodeGenerator, AccessControlService accessControlService) {
         this.locationRepository = locationRepository;
         this.eventRepository = eventRepository;
         this.qrCodeGenerator = qrCodeGenerator;
+        this.accessControlService = accessControlService;
     }
 
     @Transactional
@@ -176,6 +179,7 @@ public class LocationServiceImpl implements LocationService {
 
             return locationRepository.findById(id)
                     .map(existingLocation -> {
+                        accessControlService.requireEventOwnerOrAdmin(existingLocation.getEventEntity());
 
                         boolean updated = false;
 
@@ -239,13 +243,16 @@ public class LocationServiceImpl implements LocationService {
                 );
             }
 
-            if (!locationRepository.existsById(id)) {
+            Optional<LocationEntity> existingLocation = locationRepository.findById(id);
+            if (existingLocation.isEmpty()) {
                 logger.warn("Attempted to delete non-existent location {}", id);
                 throw new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Location with ID " + id + " not found"
                 );
             }
+
+            accessControlService.requireEventOwnerOrAdmin(existingLocation.get().getEventEntity());
 
             locationRepository.deleteById(id);
             logger.info("Location {} successfully deleted", id);
