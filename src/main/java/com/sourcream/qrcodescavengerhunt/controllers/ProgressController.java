@@ -25,17 +25,16 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @RestController
 public class ProgressController {
 
-    private ProgressSummaryMapper progressMapper;
-    private ProgressService progressService;
-    private UserService userService;
+    private final ProgressSummaryMapper progressMapper;
+    private final ProgressService progressService;
+    private final UserService userService;
 
-    private EventService eventService;
-    private UserContext userContext;
+    private final EventService eventService;
+    private final UserContext userContext;
     private static final Logger logger = LoggerFactory.getLogger(ProgressController.class);
 
     public ProgressController(ProgressSummaryMapper progressMapper, ProgressService progressService, UserService userService, EventService eventService, UserContext userContext) {
@@ -48,7 +47,7 @@ public class ProgressController {
 
     @PostMapping("/progress/{eventId}/{locationId}")
     public ResponseEntity<?> createProgress(@PathVariable("eventId") Long eventId,
-                                                             @PathVariable("locationId") Long locationId){
+                                            @PathVariable("locationId") Long locationId){
 
         if (eventId == null || locationId == null) {
             logger.warn("Invalid request: eventId = {} or locationId = {} is null", eventId, locationId);
@@ -98,72 +97,41 @@ public class ProgressController {
 
     @GetMapping("/events/{eventId}/top")
     public ResponseEntity<?> getLeaderboard(@PathVariable Long eventId) {
-        try {
-            if (eventId == null || eventId <= 0) {
-                logger.warn("Invalid leaderboard request: eventId = {}", eventId);
-                return ResponseEntity.badRequest().body(Map.of(
-                        "error", "Event ID must be a positive number",
-                        "timestamp", Instant.now()
-                ));
-            }
-
-            List<LeaderboardEntryDto> leaderboard = progressService.getLeaderboardForEventsTop10(eventId);
-
-            if (leaderboard.isEmpty()) {
-                logger.info("No leaderboard data found for eventId = {}", eventId);
-                return ResponseEntity.ok(Map.of(
-                        "message", "No leaderboard data available yet for this event",
-                        "timestamp", Instant.now()
-                ));
-            }
-
-            return ResponseEntity.ok(leaderboard);
-
-        } catch (ResponseStatusException e) {
-            logger.error("Error fetching leaderboard for eventId={}: {}", eventId, e.getReason());
-            return ResponseEntity.status(e.getStatusCode()).body(Map.of(
-                    "error", Objects.requireNonNull(e.getReason()),
-                    "timestamp", Instant.now()
-            ));
-        } catch (Exception e) {
-            logger.error("Unexpected error retrieving leaderboard for eventId={}", eventId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                    "error", "Unexpected server error while retrieving leaderboard",
+        if (eventId == null || eventId <= 0) {
+            logger.warn("Invalid leaderboard request: eventId = {}", eventId);
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Event ID must be a positive number",
                     "timestamp", Instant.now()
             ));
         }
 
+        List<LeaderboardEntryDto> leaderboard = progressService.getLeaderboardForEventsTop10(eventId);
+
+        if (leaderboard.isEmpty()) {
+            logger.info("No leaderboard data found for eventId = {}", eventId);
+            return ResponseEntity.ok(Map.of(
+                    "message", "No leaderboard data available yet for this event",
+                    "timestamp", Instant.now()
+            ));
+        }
+
+        return ResponseEntity.ok(leaderboard);
     }
 
     @GetMapping("/events/{eventId}/leaderboard/me")
     public ResponseEntity<?> getMyLeaderboardPosition(@PathVariable Long eventId, Authentication authentication) {
-        try {
-            if (eventId == null || eventId <= 0){
-                logger.warn("Invalid eventId provided for leaderboard request: {}", eventId);
-                return ResponseEntity.badRequest().body(Map.of(
-                        "error", "Event ID must be a positive number",
-                        "timestamp", Instant.now()
-                ));
-            }
-
-            UserEntity user = userContext.getCurrentUser();
-            LeaderboardEntryDto userEntry = progressService.getUserLeaderboardPosition(user, eventId);
-
-            return ResponseEntity.ok(userEntry);
-
-        } catch (ResponseStatusException e) {
-            throw e;
-        } catch (Exception e) {
-            logger.error("Unexpected error fetching leaderboard position for eventId={}", eventId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                    "error", "Unexpected server error while retrieving leaderboard position",
+        if (eventId == null || eventId <= 0){
+            logger.warn("Invalid eventId provided for leaderboard request: {}", eventId);
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Event ID must be a positive number",
                     "timestamp", Instant.now()
             ));
         }
 
+        UserEntity user = userContext.getCurrentUser();
+        LeaderboardEntryDto userEntry = progressService.getUserLeaderboardPosition(user, eventId);
 
-
-
+        return ResponseEntity.ok(userEntry);
     }
 
 

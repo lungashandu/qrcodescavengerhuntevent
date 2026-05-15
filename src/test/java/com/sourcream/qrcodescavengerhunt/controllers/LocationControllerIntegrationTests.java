@@ -2,6 +2,7 @@ package com.sourcream.qrcodescavengerhunt.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sourcream.qrcodescavengerhunt.TestDataUtil;
+import com.sourcream.qrcodescavengerhunt.domain.dto.EventDto;
 import com.sourcream.qrcodescavengerhunt.domain.dto.LocationDto;
 import com.sourcream.qrcodescavengerhunt.domain.entities.EventEntity;
 import com.sourcream.qrcodescavengerhunt.domain.entities.LocationEntity;
@@ -104,6 +105,12 @@ public class LocationControllerIntegrationTests {
     @Test
     @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
     public void testThatGetLocationByIdReturnsHttpStatus404WhenLocationNotFound() throws Exception {
+        UserEntity user = TestDataUtil.createTestUserA();
+        user = userService.saveUser(user);
+
+        EventEntity event = TestDataUtil.createTestEventA(user);
+        event = eventService.saveEvent(event);
+
         mockMvc.perform(
                 MockMvcRequestBuilders.get("/locations/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -169,7 +176,10 @@ public class LocationControllerIntegrationTests {
         user = userService.saveUser(user);
 
         EventEntity event = TestDataUtil.createTestEventA(user);
-        String eventJson = objectMapper.writeValueAsString(event);
+        eventService.saveEvent(event);
+
+        EventDto eventDto = TestDataUtil.createTestEventDtoA();
+        String eventJson = objectMapper.writeValueAsString(eventDto);
 
         mockMvc.perform(
                 MockMvcRequestBuilders.get("/locations/by-event")
@@ -194,7 +204,9 @@ public class LocationControllerIntegrationTests {
         LocationEntity location = TestDataUtil.createTestLocationA(event);
         locationService.saveLocation(location);
 
-        String eventJson = objectMapper.writeValueAsString(event);
+        EventDto eventDto = TestDataUtil.createTestEventDtoA();
+
+        String eventJson = objectMapper.writeValueAsString(eventDto);
 
         LocationDto locationDto = TestDataUtil.createTestLocationDtoA();
 
@@ -220,6 +232,11 @@ public class LocationControllerIntegrationTests {
     @Test
     @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
     public void testThatGetLocationByEventIdReturnsEmptyListWhenNoLocationsAreAvailable() throws Exception {
+        UserEntity user = TestDataUtil.createTestUserA();
+        user = userService.saveUser(user);
+
+        EventEntity event = TestDataUtil.createTestEventA(user);
+        eventService.saveEvent(event);
 
         mockMvc.perform(
                 MockMvcRequestBuilders.get("/locations/event/1")
