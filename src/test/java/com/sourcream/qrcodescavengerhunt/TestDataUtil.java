@@ -48,7 +48,7 @@ public final class TestDataUtil {
                 .eventName("Summer Scavenger Hunt")
                 .description("A fun-filled scavenger hunt around the city to explore hidden gems and landmarks.")
                 .startTime("2026-01-01T10:23:11")
-                .endTime("2026-07-01T16:00:00")
+                .endTime("2027-07-01T16:00:00")
                 .userEntity(user)
                 .build();
     }
@@ -59,7 +59,7 @@ public final class TestDataUtil {
                 .eventName("Museum Mystery Hunt")
                 .description("Solve riddles and clues to uncover secrets of the museum exhibits.")
                 .startTime("2026-02-10T12:00:00")
-                .endTime("2026-08-10T15:00:00")
+                .endTime("2027-08-10T15:00:00")
                 .userEntity(user)
                 .build();
     }
@@ -70,7 +70,7 @@ public final class TestDataUtil {
                 .eventName("Autumn Adventure Quest")
                 .description("Explore the beautiful autumn scenery while completing challenges across multiple locations.")
                 .startTime("2026-03-15T09:00:00")
-                .endTime("2026-09-15T17:00:00")
+                .endTime("2027-09-15T17:00:00")
                 .userEntity(user)
                 .build();
     }
@@ -290,7 +290,7 @@ public final class TestDataUtil {
                 .eventName("Summer Scavenger Hunt")
                 .description("A fun-filled scavenger hunt around the city to explore hidden gems and landmarks.")
                 .startTime("2026-01-01T10:23:11")
-                .endTime("2026-07-01T16:00:00")
+                .endTime("2027-07-01T16:00:00")
                 .userId(1L)
                 .build();
     }
@@ -301,7 +301,7 @@ public final class TestDataUtil {
                 .eventName("Museum Mystery Hunt")
                 .description("Solve riddles and clues to uncover secrets of the museum exhibits.")
                 .startTime("2026-02-10T12:00:00")
-                .endTime("2026-08-10T15:00:00")
+                .endTime("2027-08-10T15:00:00")
                 .userId(1L)
                 .build();
     }
