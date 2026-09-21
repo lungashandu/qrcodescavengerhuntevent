@@ -41,10 +41,6 @@ public class QRCodeGenerator {
         return new QRCodeUploadResult(fileName, uri);
     }
 
-    public String generateQRCodeAndUpload(String text) {
-        return generateQRCodeAndUploadWithMetadata(text).downloadUrl();
-    }
-
     public void deleteUploadedFile(String fileName) {
         try {
             BlobId blobId = BlobId.of(BUCKET_NAME, fileName);

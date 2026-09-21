@@ -25,12 +25,12 @@ public class LocationEntity {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "qrCodeUrl", nullable = false)
+    @Column(name = "qrCodeUrl")
     private String qrCodeUrl;
 
-    @Column(name = "hint")
+    @Column(name = "hint", nullable = false)
     private String hint;
 
-    @Column(name = "challenge", nullable = false)
+    @Column(name = "challenge")
     private String challenge;
 }
