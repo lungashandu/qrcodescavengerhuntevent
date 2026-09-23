@@ -75,6 +75,17 @@ public final class TestDataUtil {
                 .build();
     }
 
+    public static EventEntity createTestEventD(final UserEntity user) {
+        return EventEntity.builder()
+                .id(4L)
+                .eventName("Winter Adventure Quest")
+                .description("Explore the beautiful winter scenery while completing challenges across multiple locations.")
+                .startTime("2028-06-15T09:00:00")
+                .endTime("2028-08-15T17:00:00")
+                .userEntity(user)
+                .build();
+    }
+
     public static LocationEntity createTestLocationA(final EventEntity event) {
         return LocationEntity.builder()
                 .id(1L)

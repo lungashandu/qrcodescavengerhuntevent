@@ -9,5 +9,5 @@ import java.util.List;
 
 @Repository
 public interface EventRepository extends JpaRepository<EventEntity, Long> {
-    List<EventEntity> findByUserEntity(UserEntity createdBy);
+    List<EventEntity> findByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(String startTime, String endTime);
 }

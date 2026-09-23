@@ -66,20 +66,13 @@ public class EventController {
 
     }
 
-    @GetMapping("/events/by-email/{email}")
-    public ResponseEntity<?> getEventsByUser(@PathVariable("email") String email) {
-        if (email == null || email.isBlank()){
-            return ResponseEntity.badRequest().body(Map.of(
-                    "error", "Email cannot be blank",
-                    "timestamp", Instant.now()
-            ));
-        }
-
-        List<EventEntity> events = eventService.getEventsByUser(email);
+    @GetMapping("/events/active")
+    public ResponseEntity<?> getActiveEvents() {
+        List<EventEntity> events = eventService.getActiveEvents();
         List<EventDto> eventDtos = events.stream().map(eventMapper::mapTo)
                 .collect(Collectors.toList());
 
-        logger.info("Events create by {} were successfully retrieved from the database", email);
+        logger.info("Active events were successfully retrieved from the database");
 
         return ResponseEntity.ok(eventDtos);
     }
