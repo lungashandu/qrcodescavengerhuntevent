@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -73,30 +74,18 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventEntity> getEventsByUser(String email) {
-        String userEmail = userContext.getCurrentUserEmail();
-        if (email == null || email.isBlank()){
-            logger.warn("Attempted to fetch events with a null or blank email");
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email cannot be blank or null");
+    public List<EventEntity> getActiveEvents() {
+        String currentTime = LocalDateTime.now().toString();
+        List<EventEntity> activeEvents = eventRepository
+                .findByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(currentTime, currentTime);
+
+        if (activeEvents == null) {
+            logger.warn("Event repository returned null while retrieving active events");
+            return List.of();
         }
 
-        Optional<UserEntity> user = userRepository.findByEmail(email);
-        logger.info("{} is requesting to view events created by {}",
-                userEmail != null ? userEmail : "Unknown user",
-                email);
-
-        return user.map(userEntity -> {
-            List<EventEntity> events = eventRepository.findByUserEntity(userEntity);
-            if (events == null) {
-                logger.warn("eventRepository.findByUserEntity returned null for user: {}", email);
-                return List.<EventEntity>of();
-            }
-            return StreamSupport.stream(events.spliterator(), false)
-                    .collect(Collectors.toList());
-        }).orElseGet(() -> {
-            logger.warn("No user found for email: {}", email);
-            return List.<EventEntity>of();
-        });
+        logger.info("Retrieved {} active events", activeEvents.size());
+        return activeEvents;
     }
 
     @Override

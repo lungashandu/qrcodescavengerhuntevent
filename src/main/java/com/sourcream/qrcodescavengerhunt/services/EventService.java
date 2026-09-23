@@ -11,7 +11,7 @@ public interface EventService {
 
     List<EventEntity> getAllEvents();
 
-    List<EventEntity> getEventsByUser(String email);
+    List<EventEntity> getActiveEvents();
 
     Optional<EventEntity> getEventById(Long id);
 

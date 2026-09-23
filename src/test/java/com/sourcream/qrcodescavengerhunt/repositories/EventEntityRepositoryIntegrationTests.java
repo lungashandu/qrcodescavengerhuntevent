@@ -10,6 +10,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -91,17 +93,28 @@ public class EventEntityRepositoryIntegrationTests {
     }
 
     @Test
-    public void testThatEventCanBeRetrievedByUser() {
+    public void testThatActiveEventsCanBeRetrieved() {
         UserEntity user = TestDataUtil.createTestUserA();
         userRepository.save(user);
 
-        EventEntity event = TestDataUtil.createTestEventA(user);
-        underTest.save(event);
+        LocalDateTime now = LocalDateTime.now();
+        EventEntity activeEvent = TestDataUtil.createTestEventA(user);
+        activeEvent.setStartTime(now.minusHours(1).toString());
+        activeEvent.setEndTime(now.plusHours(1).toString());
+        underTest.save(activeEvent);
 
-        Iterable<EventEntity> result = underTest.findByUserEntity(user);
+        EventEntity futureEvent = TestDataUtil.createTestEventD(user);
+        futureEvent.setStartTime(now.plusHours(1).toString());
+        futureEvent.setEndTime(now.plusHours(2).toString());
+        underTest.save(futureEvent);
+
+        String currentTime = LocalDateTime.now().toString();
+        List<EventEntity> result = underTest.findByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
+                currentTime, currentTime
+        );
         assertThat(result)
                 .hasSize(1)
-                .containsExactly(event);
+                .containsExactly(activeEvent);
 
     }
 }

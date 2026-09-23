@@ -157,7 +157,7 @@ public class EventControllerIntegrationTests {
 
     @Test
     @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
-    public void testThatGetEventsByEmailReturnsHttpStatus200WhenEventIsFound() throws Exception {
+    public void testThatGetActiveEventsReturnsHttpStatus200WhenEventIsFound() throws Exception {
         UserEntity user = TestDataUtil.createTestUserA();
         user = userService.saveUser(user);
 
@@ -166,7 +166,7 @@ public class EventControllerIntegrationTests {
         eventService.saveEvent(event);
 
         mockMvc.perform(
-                MockMvcRequestBuilders.get("/events/by-email/"+user.getEmail())
+                MockMvcRequestBuilders.get("/events/active")
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(
                 MockMvcResultMatchers.status().isOk()
@@ -175,7 +175,7 @@ public class EventControllerIntegrationTests {
 
     @Test
     @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
-    public void testThatGetEventsByEmailReturnsEventWhenEventIsFound() throws Exception {
+    public void testThatGetActiveEventsReturnsEventWhenEventIsFound() throws Exception {
         UserEntity user = TestDataUtil.createTestUserA();
         user = userService.saveUser(user);
 
@@ -186,7 +186,7 @@ public class EventControllerIntegrationTests {
         EventDto responseEventDto = TestDataUtil.createTestEventDtoA();
 
         mockMvc.perform(
-                MockMvcRequestBuilders.get("/events/by-email/"+user.getEmail())
+                MockMvcRequestBuilders.get("/events/active")
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(
                 MockMvcResultMatchers.jsonPath("$[0].id").value(responseEventDto.getId())

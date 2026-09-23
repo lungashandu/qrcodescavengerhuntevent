@@ -30,6 +30,11 @@ public class EventEntity {
     @Column(name = "endTime")
     private String endTime;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "visibility", nullable = false)
+    @Builder.Default
+    private EventVisibility visibility = EventVisibility.PUBLIC;
+
     @ManyToOne
     @JoinColumn(name = "userId", nullable = false)
     private UserEntity userEntity;
