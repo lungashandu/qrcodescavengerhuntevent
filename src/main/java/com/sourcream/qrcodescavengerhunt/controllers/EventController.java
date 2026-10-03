@@ -77,6 +77,16 @@ public class EventController {
         return ResponseEntity.ok(eventDtos);
     }
 
+    @GetMapping("/events/my")
+    public ResponseEntity<?> getMyEvents() {
+        List<EventDto> eventDtos = eventService.getMyEvents().stream()
+                .map(eventMapper::mapTo)
+                .collect(Collectors.toList());
+
+        logger.info("Authenticated user's events were successfully retrieved from the database");
+        return ResponseEntity.ok(eventDtos);
+    }
+
     @PatchMapping("/events/{id}")
     public ResponseEntity<?> eventUpdate(@PathVariable("id") Long id, @Valid @RequestBody EventDto eventDto){
         if (id == null){

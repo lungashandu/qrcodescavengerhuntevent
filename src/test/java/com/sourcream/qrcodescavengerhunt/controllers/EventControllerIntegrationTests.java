@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sourcream.qrcodescavengerhunt.TestDataUtil;
 import com.sourcream.qrcodescavengerhunt.domain.dto.EventDto;
 import com.sourcream.qrcodescavengerhunt.domain.entities.EventEntity;
+import com.sourcream.qrcodescavengerhunt.domain.entities.EventVisibility;
 import com.sourcream.qrcodescavengerhunt.domain.entities.UserEntity;
+import com.sourcream.qrcodescavengerhunt.repositories.EventRepository;
 import com.sourcream.qrcodescavengerhunt.security.WithMockOidcUser;
 import com.sourcream.qrcodescavengerhunt.security.config.TestSecurityConfig;
 import com.sourcream.qrcodescavengerhunt.services.EventService;
@@ -31,20 +33,23 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 @Import(TestSecurityConfig.class)
 public class EventControllerIntegrationTests {
 
-    private MockMvc mockMvc;
-    private ObjectMapper objectMapper;
-    private EventService eventService;
-    private UserService userService;
+    private final MockMvc mockMvc;
+    private final ObjectMapper objectMapper;
+    private final EventService eventService;
+    private final UserService userService;
+    private final EventRepository eventRepository;
 
     @Autowired
     public EventControllerIntegrationTests(MockMvc mockMvc,
                                            ObjectMapper objectMapper,
                                            EventService eventService,
-                                           UserService userService) {
+                                           UserService userService,
+                                           EventRepository eventRepository) {
         this.mockMvc = mockMvc;
         this.objectMapper = objectMapper;
         this.eventService = eventService;
         this.userService = userService;
+        this.eventRepository = eventRepository;
     }
 
     @Test
@@ -200,6 +205,97 @@ public class EventControllerIntegrationTests {
                 MockMvcResultMatchers.jsonPath("$[0].endTime").value(responseEventDto.getEndTime())
         ).andExpect(
                 MockMvcResultMatchers.jsonPath("$[0].userId").value(responseEventDto.getUserId())
+        );
+    }
+
+    @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
+    public void testThatActiveEventsExcludesPrivateEvents() throws Exception {
+        UserEntity user = userService.saveUser(TestDataUtil.createTestUserA());
+        EventEntity publicEvent = eventService.saveEvent(TestDataUtil.createTestEventA(user));
+
+        EventEntity privateEvent = eventService.saveEvent(TestDataUtil.createTestEventC(user));
+        privateEvent.setVisibility(EventVisibility.PRIVATE);
+        eventService.saveEvent(privateEvent);
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.get("/events/active")
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(
+                MockMvcResultMatchers.status().isOk()
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$").isArray()
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.length()").value(1)
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$[0].id").value(publicEvent.getId())
+        );
+    }
+
+    @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
+    public void testThatEventsCannotBeRequestedUsingAnotherUsersEmailPath() throws Exception {
+         mockMvc.perform(
+                 MockMvcRequestBuilders.get("/events/by-email/jane.smith@example.com")
+                         .contentType(MediaType.APPLICATION_JSON)
+         ).andExpect(
+                 MockMvcResultMatchers.status().isNotFound()
+         );
+    }
+    @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
+    public void testThatGetEventsByUserIdReturnsHttpStatus200() throws Exception {
+        UserEntity user = TestDataUtil.createTestUserA();
+        user = userService.saveUser(user);
+
+        EventEntity event = TestDataUtil.createTestEventA(user);
+        eventService.saveEvent(event);
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.get("/events/my")
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(
+                MockMvcResultMatchers.status().isOk()
+        );
+    }
+
+    @Test
+    public void testThatGetMyEventsRequiresAuthentication() throws Exception {
+        mockMvc.perform(
+                MockMvcRequestBuilders.get("/events/my")
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(
+                MockMvcResultMatchers.status().isUnauthorized()
+        );
+    }
+
+    @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
+    public void testThatGetMyEventsReturnsEventsWhenEventsAreFound() throws Exception {
+        UserEntity currentUser = userService.saveUser(TestDataUtil.createTestUserA());
+        UserEntity otherUser = userService.saveUser(TestDataUtil.createTestUserB());
+
+        EventEntity privateEvent = TestDataUtil.createTestEventA(currentUser);
+        privateEvent.setVisibility(EventVisibility.PRIVATE);
+        EventEntity savedEvent = eventService.saveEvent(privateEvent);
+
+        EventEntity publicEvent = TestDataUtil.createTestEventB(currentUser);
+        EventEntity secondEvent = eventService.saveEvent(publicEvent);
+
+        EventEntity otherUsersPublicEvent = TestDataUtil.createTestEventC(otherUser);
+        eventRepository.save(otherUsersPublicEvent);
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.get("/events/my")
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(
+                MockMvcResultMatchers.status().isOk()
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.length()").value(2)
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$[0].id").value(savedEvent.getId())
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("[1].id").value(secondEvent.getId())
         );
     }
 

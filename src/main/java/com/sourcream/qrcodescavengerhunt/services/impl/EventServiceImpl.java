@@ -1,6 +1,7 @@
 package com.sourcream.qrcodescavengerhunt.services.impl;
 
 import com.sourcream.qrcodescavengerhunt.domain.entities.EventEntity;
+import com.sourcream.qrcodescavengerhunt.domain.entities.EventVisibility;
 import com.sourcream.qrcodescavengerhunt.domain.entities.UserEntity;
 import com.sourcream.qrcodescavengerhunt.repositories.EventRepository;
 import com.sourcream.qrcodescavengerhunt.repositories.UserRepository;
@@ -77,7 +78,7 @@ public class EventServiceImpl implements EventService {
     public List<EventEntity> getActiveEvents() {
         String currentTime = LocalDateTime.now().toString();
         List<EventEntity> activeEvents = eventRepository
-                .findByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(currentTime, currentTime);
+                .findByVisibilityAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(EventVisibility.PUBLIC ,currentTime, currentTime);
 
         if (activeEvents == null) {
             logger.warn("Event repository returned null while retrieving active events");
@@ -86,6 +87,21 @@ public class EventServiceImpl implements EventService {
 
         logger.info("Retrieved {} active events", activeEvents.size());
         return activeEvents;
+    }
+
+    @Override
+    public List<EventEntity> getMyEvents() {
+        UserEntity currentUser = userContext.getCurrentUser();
+        List<EventEntity> events = eventRepository.findByUserEntityId(currentUser.getId());
+
+        if (events == null) {
+            logger.warn("Event repository returned null while retrieving events for user {}", currentUser.getId());
+            return List.of();
+        }
+
+        logger.info("Retrieve {} events for user {}", events.size(), currentUser.getId());
+
+        return events;
     }
 
     @Override

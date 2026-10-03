@@ -2,6 +2,7 @@ package com.sourcream.qrcodescavengerhunt.repositories;
 
 import com.sourcream.qrcodescavengerhunt.TestDataUtil;
 import com.sourcream.qrcodescavengerhunt.domain.entities.EventEntity;
+import com.sourcream.qrcodescavengerhunt.domain.entities.EventVisibility;
 import com.sourcream.qrcodescavengerhunt.domain.entities.UserEntity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,8 +22,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class EventEntityRepositoryIntegrationTests {
 
-    private EventRepository underTest;
-    private UserRepository userRepository;
+    private final EventRepository underTest;
+    private final UserRepository userRepository;
 
     @Autowired
     public EventEntityRepositoryIntegrationTests(EventRepository underTest, UserRepository userRepository){
@@ -103,18 +104,45 @@ public class EventEntityRepositoryIntegrationTests {
         activeEvent.setEndTime(now.plusHours(1).toString());
         underTest.save(activeEvent);
 
+        EventEntity privateEvent = TestDataUtil.createTestEventB(user);
+        privateEvent.setStartTime(now.minusHours(1).toString());
+        privateEvent.setEndTime(now.plusHours(1).toString());
+        privateEvent.setVisibility(EventVisibility.PRIVATE);
+        underTest.save(privateEvent);
+
         EventEntity futureEvent = TestDataUtil.createTestEventD(user);
         futureEvent.setStartTime(now.plusHours(1).toString());
         futureEvent.setEndTime(now.plusHours(2).toString());
         underTest.save(futureEvent);
 
         String currentTime = LocalDateTime.now().toString();
-        List<EventEntity> result = underTest.findByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
+        List<EventEntity> result = underTest.findByVisibilityAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual( EventVisibility.PUBLIC,
                 currentTime, currentTime
         );
         assertThat(result)
                 .hasSize(1)
                 .containsExactly(activeEvent);
 
+    }
+
+    @Test
+    public void testThatEventsCanBeRetrievedByUserId() {
+        UserEntity user = TestDataUtil.createTestUserA();
+        userRepository.save(user);
+
+        UserEntity user2 = TestDataUtil.createTestUserB();
+        userRepository.save(user2);
+
+        EventEntity eventByUser1 = TestDataUtil.createTestEventA(user);
+        underTest.save(eventByUser1);
+
+        EventEntity eventByUser2 = TestDataUtil.createTestEventB(user2);
+        underTest.save(eventByUser2);
+
+        List<EventEntity> result = underTest.findByUserEntityId(user.getId());
+
+        assertThat(result)
+                .hasSize(1)
+                .containsExactly(eventByUser1);
     }
 }

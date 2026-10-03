@@ -13,6 +13,8 @@ public interface EventService {
 
     List<EventEntity> getActiveEvents();
 
+    List<EventEntity> getMyEvents();
+
     Optional<EventEntity> getEventById(Long id);
 
     Boolean isExists(Long id);
