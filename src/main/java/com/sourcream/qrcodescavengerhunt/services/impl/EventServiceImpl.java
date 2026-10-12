@@ -10,6 +10,9 @@ import com.sourcream.qrcodescavengerhunt.util.AccessControlService;
 import com.sourcream.qrcodescavengerhunt.util.UserContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -87,6 +90,19 @@ public class EventServiceImpl implements EventService {
 
         logger.info("Retrieved {} active events", activeEvents.size());
         return activeEvents;
+    }
+
+    @Override
+    public Slice<EventEntity> getPastEvents(Pageable pageable) {
+        String currentTime = LocalDateTime.now().toString();
+        Slice<EventEntity> pastEvents = eventRepository.findByVisibilityAndEndTimeLessThanEqual(EventVisibility.PUBLIC, currentTime, pageable);
+
+        if (pastEvents == null) {
+            logger.warn("Event repository return null while retrieving past events");
+            return new SliceImpl<>(List.of(), pageable, false);
+        }
+        logger.info("Retrieved {} past events", pastEvents.getNumberOfElements());
+        return pastEvents;
     }
 
     @Override

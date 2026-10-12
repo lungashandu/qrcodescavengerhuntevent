@@ -8,6 +8,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -144,5 +147,42 @@ public class EventEntityRepositoryIntegrationTests {
         assertThat(result)
                 .hasSize(1)
                 .containsExactly(eventByUser1);
+    }
+
+    @Test
+    void testThatPastPublicEventsCanBeRetrievedInSlices() {
+        UserEntity user = userRepository.save(TestDataUtil.createTestUserA());
+
+        EventEntity pastEventOne = TestDataUtil.createTestEventA(user);
+        pastEventOne.setStartTime(LocalDateTime.now().minusHours(3).toString());
+        pastEventOne.setEndTime(LocalDateTime.now().minusHours(1).toString());
+        underTest.save(pastEventOne);
+
+        EventEntity pastEventTwo = TestDataUtil.createTestEventB(user);
+        pastEventTwo.setStartTime(LocalDateTime.now().minusHours(6).toString());
+        pastEventTwo.setEndTime(LocalDateTime.now().minusHours(3).toString());
+        underTest.save(pastEventTwo);
+
+        EventEntity pastEventThree = TestDataUtil.createTestEventC(user);
+        pastEventThree.setStartTime(LocalDateTime.now().minusHours(12).toString());
+        pastEventThree.setEndTime(LocalDateTime.now().minusHours(10).toString());
+        underTest.save(pastEventThree);
+
+        EventEntity activeEvent = TestDataUtil.createTestEventD(user);
+        activeEvent.setStartTime(LocalDateTime.now().minusHours(3).toString());
+        activeEvent.setEndTime(LocalDateTime.now().plusHours(3).toString());
+        underTest.save(activeEvent);
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Slice<EventEntity> result = underTest.findByVisibilityAndEndTimeLessThanEqual(EventVisibility.PUBLIC, LocalDateTime.now().toString(), pageable);
+
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getContent().get(0)).isEqualTo(pastEventOne);
+        assertThat(result.hasNext()).isFalse();
+        assertThat(result.getNumber()).isZero();
+        assertThat(result.getSize()).isEqualTo(10);
+
+
     }
 }

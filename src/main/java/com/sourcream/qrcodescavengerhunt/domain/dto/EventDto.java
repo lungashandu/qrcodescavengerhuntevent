@@ -1,5 +1,6 @@
 package com.sourcream.qrcodescavengerhunt.domain.dto;
 
+import com.sourcream.qrcodescavengerhunt.domain.entities.EventVisibility;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -32,4 +33,6 @@ public class EventDto {
     private String endTime;
 
     private Long userId;
+
+    private EventVisibility visibility;
 }

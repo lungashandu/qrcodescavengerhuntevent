@@ -25,6 +25,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import java.time.LocalDateTime;
+
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @ActiveProfiles("test")
@@ -380,6 +382,55 @@ public class EventControllerIntegrationTests {
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(
                 MockMvcResultMatchers.status().isNoContent()
+        );
+    }
+
+    @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
+    public void testThatPastEventsReturnStatusCode200WhenEventsAreFound() throws Exception {
+        UserEntity user = userService.saveUser(TestDataUtil.createTestUserA());
+
+        EventEntity event = TestDataUtil.createTestEventA(user);
+        event.setStartTime(LocalDateTime.now().minusHours(3).toString());
+        event.setEndTime(LocalDateTime.now().minusHours(1).toString());
+        eventService.saveEvent(event);
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.get("/events/past")
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(
+                MockMvcResultMatchers.status().isOk()
+        );
+    }
+
+    @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
+    public void testThatPastEventsReturnPublicPastEventsWhenEventsAreFound() throws Exception {
+        UserEntity user = userService.saveUser(TestDataUtil.createTestUserA());
+
+        EventEntity publicPastEvent = TestDataUtil.createTestEventA(user);
+        publicPastEvent.setStartTime(LocalDateTime.now().minusHours(3).toString());
+        publicPastEvent.setEndTime(LocalDateTime.now().minusHours(1).toString());
+        eventService.saveEvent(publicPastEvent);
+
+        EventEntity privatePastEvent = TestDataUtil.createTestEventC(user);
+        privatePastEvent.setStartTime(LocalDateTime.now().minusHours(6).toString());
+        privatePastEvent.setEndTime(LocalDateTime.now().minusHours(3).toString());
+        eventService.saveEvent(privatePastEvent);
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.get("/events/past")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.content").isArray()
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.content.length()").value(1)
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.content[0].id").value(publicPastEvent.getId())
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.last").value(true)
         );
     }
 }
