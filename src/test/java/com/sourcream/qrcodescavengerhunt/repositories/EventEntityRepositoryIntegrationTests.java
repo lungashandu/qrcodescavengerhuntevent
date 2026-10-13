@@ -118,13 +118,18 @@ public class EventEntityRepositoryIntegrationTests {
         futureEvent.setEndTime(now.plusHours(2).toString());
         underTest.save(futureEvent);
 
+        Pageable pageable = PageRequest.of(0, 10);
+
         String currentTime = LocalDateTime.now().toString();
-        List<EventEntity> result = underTest.findByVisibilityAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual( EventVisibility.PUBLIC,
-                currentTime, currentTime
+        Slice<EventEntity> result = underTest.findByVisibilityAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual( EventVisibility.PUBLIC,
+                currentTime, currentTime, pageable
         );
-        assertThat(result)
-                .hasSize(1)
-                .containsExactly(activeEvent);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.getContent().get(0)).isEqualTo(activeEvent);
+        assertThat(result.hasNext()).isFalse();
+        assertThat(result.getNumber()).isZero();
+        assertThat(result.getSize()).isEqualTo(10);
 
     }
 

@@ -78,17 +78,17 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventEntity> getActiveEvents() {
+    public Slice<EventEntity> getActiveEvents(Pageable pageable) {
         String currentTime = LocalDateTime.now().toString();
-        List<EventEntity> activeEvents = eventRepository
-                .findByVisibilityAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(EventVisibility.PUBLIC ,currentTime, currentTime);
+        Slice<EventEntity> activeEvents = eventRepository
+                .findByVisibilityAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(EventVisibility.PUBLIC ,currentTime, currentTime, pageable);
 
         if (activeEvents == null) {
             logger.warn("Event repository returned null while retrieving active events");
-            return List.of();
+            return new SliceImpl<>(List.of(), pageable, false);
         }
 
-        logger.info("Retrieved {} active events", activeEvents.size());
+        logger.info("Retrieved {} active events", activeEvents.getNumberOfElements());
         return activeEvents;
     }
 

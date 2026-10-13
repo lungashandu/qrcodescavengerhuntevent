@@ -11,7 +11,7 @@ import java.util.List;
 
 @Repository
 public interface EventRepository extends JpaRepository<EventEntity, Long> {
-    List<EventEntity> findByVisibilityAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(EventVisibility visibility, String startTime, String endTime);
+    Slice<EventEntity> findByVisibilityAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(EventVisibility visibility, String startTime, String endTime, Pageable pageable);
 
     List<EventEntity> findByUserEntityId(Long userId);
 

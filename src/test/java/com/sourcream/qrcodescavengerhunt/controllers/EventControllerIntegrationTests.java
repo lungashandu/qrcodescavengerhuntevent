@@ -174,6 +174,8 @@ public class EventControllerIntegrationTests {
 
         mockMvc.perform(
                 MockMvcRequestBuilders.get("/events/active")
+                        .param("page", "0")
+                        .param("size", "10")
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(
                 MockMvcResultMatchers.status().isOk()
@@ -194,19 +196,17 @@ public class EventControllerIntegrationTests {
 
         mockMvc.perform(
                 MockMvcRequestBuilders.get("/events/active")
+                        .param("page", "0")
+                        .param("size", "10")
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$[0].id").value(responseEventDto.getId())
+                MockMvcResultMatchers.jsonPath("$.content").isArray()
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$[0].eventName").value(responseEventDto.getEventName())
+                MockMvcResultMatchers.jsonPath("$.content.length()").value(1)
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$[0].description").value(responseEventDto.getDescription())
+                MockMvcResultMatchers.jsonPath("$.content[0].id").value(responseEventDto.getId())
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$[0].startTime").value(responseEventDto.getStartTime())
-        ).andExpect(
-                MockMvcResultMatchers.jsonPath("$[0].endTime").value(responseEventDto.getEndTime())
-        ).andExpect(
-                MockMvcResultMatchers.jsonPath("$[0].userId").value(responseEventDto.getUserId())
+                MockMvcResultMatchers.jsonPath("$.last").value(true)
         );
     }
 
@@ -222,15 +222,17 @@ public class EventControllerIntegrationTests {
 
         mockMvc.perform(
                 MockMvcRequestBuilders.get("/events/active")
+                        .param("page", "0")
+                        .param("size", "10")
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(
                 MockMvcResultMatchers.status().isOk()
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$").isArray()
+                MockMvcResultMatchers.jsonPath("$.content").isArray()
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.length()").value(1)
+                MockMvcResultMatchers.jsonPath("$.content.length()").value(1)
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$[0].id").value(publicEvent.getId())
+                MockMvcResultMatchers.jsonPath("$.content[0].id").value(publicEvent.getId())
         );
     }
 

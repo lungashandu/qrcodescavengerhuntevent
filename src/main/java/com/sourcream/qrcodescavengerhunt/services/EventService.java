@@ -13,7 +13,7 @@ public interface EventService {
 
     List<EventEntity> getAllEvents();
 
-    List<EventEntity> getActiveEvents();
+    Slice<EventEntity> getActiveEvents(Pageable pageable);
 
     Slice<EventEntity> getPastEvents(Pageable pageable);
 
