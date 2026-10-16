@@ -6,6 +6,8 @@ import com.sourcream.qrcodescavengerhunt.mappers.Mapper;
 import com.sourcream.qrcodescavengerhunt.services.EventService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -67,13 +69,31 @@ public class EventController {
     }
 
     @GetMapping("/events/active")
-    public ResponseEntity<?> getActiveEvents() {
-        List<EventEntity> events = eventService.getActiveEvents();
-        List<EventDto> eventDtos = events.stream().map(eventMapper::mapTo)
-                .collect(Collectors.toList());
+    public ResponseEntity<?> getActiveEvents(Pageable pageable) {
+        Slice<EventEntity> events = eventService.getActiveEvents(pageable);
+        Slice<EventDto> eventDtos = events.map(eventMapper::mapTo);
 
         logger.info("Active events were successfully retrieved from the database");
 
+        return ResponseEntity.ok(eventDtos);
+    }
+
+    @GetMapping("/events/past")
+    public ResponseEntity<?> getPastEvents(Pageable pageable) {
+        Slice<EventEntity> events = eventService.getPastEvents(pageable);
+        Slice<EventDto> eventDtos = events.map(eventMapper::mapTo);
+
+        logger.info("Active events were successfully retrieved from the database");
+        return ResponseEntity.ok(eventDtos);
+    }
+
+    @GetMapping("/events/my")
+    public ResponseEntity<?> getMyEvents() {
+        List<EventDto> eventDtos = eventService.getMyEvents().stream()
+                .map(eventMapper::mapTo)
+                .collect(Collectors.toList());
+
+        logger.info("Authenticated user's events were successfully retrieved from the database");
         return ResponseEntity.ok(eventDtos);
     }
 

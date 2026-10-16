@@ -50,6 +50,7 @@ public final class TestDataUtil {
                 .startTime("2026-01-01T10:23:11")
                 .endTime("2027-07-01T16:00:00")
                 .userEntity(user)
+                .visibility(EventVisibility.PUBLIC)
                 .build();
     }
 
@@ -61,6 +62,7 @@ public final class TestDataUtil {
                 .startTime("2026-02-10T12:00:00")
                 .endTime("2027-08-10T15:00:00")
                 .userEntity(user)
+                .visibility(EventVisibility.PUBLIC)
                 .build();
     }
 
@@ -72,6 +74,7 @@ public final class TestDataUtil {
                 .startTime("2026-03-15T09:00:00")
                 .endTime("2027-09-15T17:00:00")
                 .userEntity(user)
+                .visibility(EventVisibility.PRIVATE)
                 .build();
     }
 
@@ -83,6 +86,7 @@ public final class TestDataUtil {
                 .startTime("2028-06-15T09:00:00")
                 .endTime("2028-08-15T17:00:00")
                 .userEntity(user)
+                .visibility(EventVisibility.PUBLIC)
                 .build();
     }
 

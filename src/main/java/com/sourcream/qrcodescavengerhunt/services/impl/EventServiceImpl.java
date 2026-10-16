@@ -1,6 +1,7 @@
 package com.sourcream.qrcodescavengerhunt.services.impl;
 
 import com.sourcream.qrcodescavengerhunt.domain.entities.EventEntity;
+import com.sourcream.qrcodescavengerhunt.domain.entities.EventVisibility;
 import com.sourcream.qrcodescavengerhunt.domain.entities.UserEntity;
 import com.sourcream.qrcodescavengerhunt.repositories.EventRepository;
 import com.sourcream.qrcodescavengerhunt.repositories.UserRepository;
@@ -9,6 +10,9 @@ import com.sourcream.qrcodescavengerhunt.util.AccessControlService;
 import com.sourcream.qrcodescavengerhunt.util.UserContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -74,18 +78,46 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventEntity> getActiveEvents() {
+    public Slice<EventEntity> getActiveEvents(Pageable pageable) {
         String currentTime = LocalDateTime.now().toString();
-        List<EventEntity> activeEvents = eventRepository
-                .findByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(currentTime, currentTime);
+        Slice<EventEntity> activeEvents = eventRepository
+                .findByVisibilityAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(EventVisibility.PUBLIC ,currentTime, currentTime, pageable);
 
         if (activeEvents == null) {
             logger.warn("Event repository returned null while retrieving active events");
+            return new SliceImpl<>(List.of(), pageable, false);
+        }
+
+        logger.info("Retrieved {} active events", activeEvents.getNumberOfElements());
+        return activeEvents;
+    }
+
+    @Override
+    public Slice<EventEntity> getPastEvents(Pageable pageable) {
+        String currentTime = LocalDateTime.now().toString();
+        Slice<EventEntity> pastEvents = eventRepository.findByVisibilityAndEndTimeLessThanEqual(EventVisibility.PUBLIC, currentTime, pageable);
+
+        if (pastEvents == null) {
+            logger.warn("Event repository return null while retrieving past events");
+            return new SliceImpl<>(List.of(), pageable, false);
+        }
+        logger.info("Retrieved {} past events", pastEvents.getNumberOfElements());
+        return pastEvents;
+    }
+
+    @Override
+    public List<EventEntity> getMyEvents() {
+        UserEntity currentUser = userContext.getCurrentUser();
+        List<EventEntity> events = eventRepository.findByUserEntityId(currentUser.getId());
+
+        if (events == null) {
+            logger.warn("Event repository returned null while retrieving events for user {}", currentUser.getId());
             return List.of();
         }
 
-        logger.info("Retrieved {} active events", activeEvents.size());
-        return activeEvents;
+        logger.info("Retrieve {} events for user {}", events.size(), currentUser.getId());
+
+        return events;
     }
 
     @Override
