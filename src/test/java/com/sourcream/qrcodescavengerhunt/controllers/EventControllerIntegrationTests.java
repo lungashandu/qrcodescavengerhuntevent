@@ -164,6 +164,25 @@ public class EventControllerIntegrationTests {
 
     @Test
     @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
+    public void testThatEventVisibilityIsSavedAsPublicWhenNoValueIsProvided() throws Exception {
+        UserEntity user = userService.saveUser(TestDataUtil.createTestUserA());
+
+        EventDto event = TestDataUtil.createTestEventDtoA();
+        String eventJson = objectMapper.writeValueAsString(event);
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.post("/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(eventJson)
+        ).andExpect(
+                MockMvcResultMatchers.status().isCreated()
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.visibility").value(EventVisibility.PUBLIC.name())
+        );
+    }
+
+    @Test
+    @WithMockOidcUser(email = "john.doe@example.com", name = "John Doe", roles = {"USER"})
     public void testThatGetActiveEventsReturnsHttpStatus200WhenEventIsFound() throws Exception {
         UserEntity user = TestDataUtil.createTestUserA();
         user = userService.saveUser(user);

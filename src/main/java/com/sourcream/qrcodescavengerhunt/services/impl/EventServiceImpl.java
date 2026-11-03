@@ -60,6 +60,10 @@ public class EventServiceImpl implements EventService {
                     return new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found. Please complete registration first.");
                 });
 
+        if (event.getVisibility() == null) {
+            event.setVisibility(EventVisibility.PUBLIC);
+        }
+
         event.setUserEntity(user);
         logger.info("{} is attempting to save an event {}", email, event.getEventName());
         return eventRepository.save(event);

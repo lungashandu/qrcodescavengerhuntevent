@@ -15,5 +15,6 @@ public interface EventMapper extends Mapper<EventEntity, EventDto> {
 
     @Override
     @Mapping(source = "userId", target = "userEntity.id")
+    @Mapping(target = "visibility", source = "visibility", defaultExpression = "java(com.sourcream.qrcodescavengerhunt.domain.entities.EventVisibility.PUBLIC)")
     EventEntity mapFrom(EventDto dto);
 }
